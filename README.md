@@ -251,7 +251,7 @@ yarn ci:test               # Run test job only
 # API Testing & Development
 yarn tsx tools/api-testing/generate-test-tokens.ts   # Generate test tokens (requires running services)
 # Output: test-tokens.json with tokens for different user roles:
-#   - ADMIN, MEMBER, PROFESSIONAL, THERAPIST, CONTENT_CREATOR
+#   - ADMIN, CUSTOMER, BUSINESS
 # Note: For long-lasting tokens (1 year), set JWT_ACCESS_EXPIRY=365d in .env
 ```
 
@@ -259,13 +259,13 @@ yarn tsx tools/api-testing/generate-test-tokens.ts   # Generate test tokens (req
 
 ```bash
 # Start individual services
-yarn nx run @pikauth:local
-yarn nx run @pikaym:local
-yarn nx run @pikaession:local
+yarn nx run @pika/auth:local
+yarn nx run @pika/business:local
+yarn nx run @pika/category:local
 
 # Service-specific testing
 yarn vitest packages/services/auth
-yarn vitest packages/services/gym
+yarn vitest packages/services/business
 ```
 
 ### Service Ports
@@ -274,23 +274,30 @@ yarn vitest packages/services/gym
 | -------------------- | ---- | ----------------------------------- |
 | **API Gateway**      | 5500 | 🌐 Main entry point & documentation |
 | **User Service**     | 5501 | 👤 User profiles & management       |
-| **Business Service** | 5510 | 🏪 Business directory & locations   |
-| **Category Service** | 5512 | 📂 Hierarchical category management |
-| **PDF Service**      | 5514 | 📄 Document generation & processing |
+| **Auth Service**     | 5502 | 🔐 Authentication & authorization  |
+| **Payment Service**  | 5505 | 💳 Payment processing & Stripe     |
+| **Subscription Service** | 5506 | 📋 Subscription management      |
+| **Communication Service** | 5507 | ✉️ Email & notifications        |
+| **Support Service**  | 5508 | 🆘 Customer support system      |
+| **Storage Service**  | 5510 | 🗂 File storage & uploads          |
+| **Business Service** | 5511 | 🏢 Business directory & management |
+| **Category Service** | 5512 | 📂 Hierarchical category system   |
+| **PDF Service**      | 5513 | 📄 Document generation & processing |
+| **Voucher Service**  | 5514 | 🎫 Voucher management & validation |
 
 ### Infrastructure Services
 
 | Service        | Port | Credentials              | Purpose                          |
 | -------------- | ---- | ------------------------ | -------------------------------- |
-| **PostgreSQL** | 5435 | `postgres:postgres@pika` | 🗃️ Primary database with PostGIS |
-| **Redis**      | 6380 | No authentication (dev)  | 🔴 Caching & session storage     |
+| **PostgreSQL** | 6436 | `postgres:postgres@pika` | 🗃️ Primary database with PostGIS |
+| **Redis**      | 7381 | No authentication (dev)  | 🔴 Caching & session storage     |
 
 ### Development URLs
 
 - **🌐 API Gateway**: http://127.0.0.1:5500
 - **📖 API Documentation**: http://127.0.0.1:5500/docs (Interactive Scalar UI)
-- **🗃️ Database**: postgresql://postgres:postgres@127.0.0.1:5435/pika
-- **🔴 Redis**: redis://127.0.0.1:6380
+- **🗃️ Database**: postgresql://postgres:postgres@127.0.0.1:6436/pika
+- **🔴 Redis**: redis://127.0.0.1:7381
 
 ---
 
@@ -445,7 +452,7 @@ yarn test:integration
 
 # Run specific test files
 yarn vitest packages/services/auth/src/test
-yarn vitest packages/services/session/src/test
+yarn vitest packages/services/voucher/src/test
 ```
 
 ### Testing Features
@@ -515,13 +522,14 @@ SKIP_AUTH=false
 # Service ports
 AUTH_SERVICE_PORT=5502
 USER_SERVICE_PORT=5501
-GYM_SERVICE_PORT=5503
+BUSINESS_SERVICE_PORT=5511
+CATEGORY_SERVICE_PORT=5512
 # ... additional service ports
 ```
 
 ### Service Configuration
 
-Each service is independently configurable through the `@pikanvironment` package:
+Each service is independently configurable through the `@pika/environment` package:
 
 - **Type-safe configuration** with validation
 - **Environment-specific overrides** (development, test, production)
@@ -700,8 +708,8 @@ GET  /metrics                   # Performance metrics
 # Service-specific endpoints
 POST /auth/login               # Authentication
 GET  /users/profile            # User management
-GET  /gyms                     # Gym listings
-POST /sessions/book            # Session booking
+GET  /businesses               # Business listings
+POST /vouchers/redeem          # Voucher redemption
 GET  /payments/methods         # Payment management
 ```
 
