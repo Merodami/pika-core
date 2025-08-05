@@ -1,0 +1,75 @@
+{
+  "name": "@pika/auth-service",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "@pika/api",
+    "@pika/auth",
+    "@pika/shared",
+    "@pika/database",
+    "@pika/types",
+    "@pika/tests",
+    "@pika/sdk",
+    "@pika/http",
+    "@pika/redis"
+  ],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p tsconfig.json --noEmit",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "test:watch": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "depcheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "yarn knip --workspace={projectName}",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "build:prod": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -rf dist && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
+        "cwd": "{projectRoot}"
+      },
+      "outputs": ["{projectRoot}/dist"]
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -rf dist && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
+        "cwd": "{projectRoot}"
+      },
+      "outputs": ["{projectRoot}/dist"]
+    },
+    "local": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "sleep 5 && tsx --watch ./src/index.ts",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eslint .",
+        "cwd": "{projectRoot}"
+      }
+    }
+  }
+}

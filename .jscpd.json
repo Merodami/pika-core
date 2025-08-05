@@ -1,0 +1,28 @@
+{
+  "threshold": 0,
+  "reporters": ["html", "console", "json"],
+  "ignore": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/.next/**",
+    "**/coverage/**",
+    "**/reports/**",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/*.integration-test.ts",
+    "**/previous-architecture/**",
+    "**/pika-old/**",
+    "**/packages/api/generated/**",
+    "**/packages/api/src/scripts/generators/**",
+    "**/packages/database/prisma/migrations/**",
+    "**/packages/database/prisma/schema.prisma"
+  ],
+  "minLines": 5,
+  "minTokens": 50,
+  "output": "./reports/duplicates",
+  "gitignore": true,
+  "absolute": false,
+  "format": ["javascript", "typescript", "tsx", "jsx"],
+  "mode": "strict"
+}

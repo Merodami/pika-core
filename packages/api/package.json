@@ -1,0 +1,77 @@
+{
+  "name": "@pika/api",
+  "version": "1.1.1",
+  "description": "API schemas and validation for Pika platform",
+  "private": false,
+  "author": "Damian Meroni",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./schemas": {
+      "types": "./dist/schemas/index.d.ts",
+      "import": "./dist/schemas/index.js"
+    },
+    "./common": {
+      "types": "./dist/common/index.d.ts",
+      "import": "./dist/common/index.js"
+    },
+    "./public": {
+      "types": "./dist/public.d.ts",
+      "import": "./dist/public.js"
+    },
+    "./admin": {
+      "types": "./dist/admin.d.ts",
+      "import": "./dist/admin.js"
+    },
+    "./internal": {
+      "types": "./dist/internal.d.ts",
+      "import": "./dist/internal.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.test.*",
+    "!dist/scripts"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Merodami/pika-backend.git"
+  },
+  "homepage": "https://github.com/Merodami/pika-backend#readme",
+  "bugs": {
+    "url": "https://github.com/Merodami/pika-backend/issues"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json && yarn copy:openapi",
+    "copy:openapi": "mkdir -p dist && cp generated/openapi/all-apis.json dist/openapi.json",
+    "prebuild": "yarn generate:openapi",
+    "generate:openapi": "tsx src/scripts/generate-all-apis.ts",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "test": "vitest run src/**/*.test.ts",
+    "lint": "eslint src --ext .ts",
+    "clean": "rm -rf dist generated"
+  },
+  "dependencies": {
+    "@pika/types": "workspace:^",
+    "@asteasolutions/zod-to-openapi": "^8.0.0",
+    "lodash-es": "^4.17.21",
+    "zod": "^4.0.10"
+  },
+  "devDependencies": {
+    "@types/lodash-es": "^4.17.12",
+    "typescript": "^5.8.3",
+    "tsc-alias": "^1.8.16",
+    "tsx": "^4.20.3",
+    "vitest": "^3.2.4"
+  }
+}

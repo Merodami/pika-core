@@ -1,0 +1,22 @@
+// User addresses
+model Address {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String          @map("user_id") @db.Uuid
+  addressLine1    String          @map("address_line1") @db.VarChar(255)
+  addressLine2    String?         @map("address_line2") @db.VarChar(255)
+  city            String          @db.VarChar(100)
+  state           String          @db.VarChar(100)
+  postalCode      String          @map("postal_code") @db.VarChar(20)
+  country         String          @default("United States") @db.VarChar(100)
+  isDefault       Boolean         @default(false) @map("is_default")
+  createdAt       DateTime?        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime?        @default(now()) @map("updated_at") @db.Timestamptz(6) @updatedAt
+  deletedAt       DateTime?         @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  user            User            @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("addresses")
+  @@schema("users")
+}

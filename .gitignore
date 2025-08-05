@@ -1,0 +1,164 @@
+# compiled output
+/dist
+/tmp
+/out-tsc
+
+# dependencies
+/node_modules
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+npm-debug.log
+yarn-error.log
+/typings
+
+# System Files
+.DS_Store
+Thumbs.db
+node_modules
+dist
+.env
+eslint_report.json
+*.tar
+.history
+
+# Code quality reports
+reports/
+.size-limit-cache/
+
+# Yarn
+.yarn/*
+!.yarn/cache
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+tsconfig.tsbuildinfo
+
+.nx/cache
+.nx/workspace-data
+
+localstack_data
+
+# Security - Never commit private keys or tokens
+keys/
+*.pem
+*.key
+.env.production
+test-tokens.json
+# Package registry tokens (should use env vars)
+packages/**/.npmrc
+scripts/**/*.sh.local
+
+# misc
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Optional eslint cache
+.eslintcache
+
+**/.claude/settings.local.json
+**/.lambda/**
+**/*/schema.prisma
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+.vercel
+build
+
+# Testing
+/coverage
+**/.nyc_output
+**/vitest/coverage
+**/vite.config.js.timestamp-*
+
+previous-architecture/*
+!packages/database/prisma/migrations/**/*.sql
+!packages/tests/src/utils/dump/init.sql
+
+# Local database data
+.local/
+
+# Test tokens - should not be committed
+test-tokens.json
+
+# Generated files
+packages/api/generated/
+packages/database/prisma/schema.prisma
+
+# Build artifacts
+**/dist/
+**/build/
+**/.turbo/
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+# NX workspace
+.nx/
+nx-cloud/
+
+# Node.js cache
+node_modules/.cache/
+.node_repl_history
+
+# OS temporary files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE temporary files
+.idea/
+*.iml
+.vscode-test/
+
+# TypeScript cache
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Package manager cache
+.pnp.*
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+# CI examples
+.github/workflows/*.example
+
+# Uploads folder
+uploads/
+pika-old/
+docs

@@ -1,0 +1,42 @@
+[
+  {
+    "name": "API Gateway Bundle",
+    "path": "packages/api-gateway/dist/index.js",
+    "limit": "500 KB"
+  },
+  {
+    "name": "Auth Service Bundle",
+    "path": "packages/services/auth/dist/index.js",
+    "limit": "300 KB"
+  },
+  {
+    "name": "User Service Bundle",
+    "path": "packages/services/user/dist/index.js",
+    "limit": "250 KB"
+  },
+  {
+    "name": "Payment Service Bundle",
+    "path": "packages/services/payment/dist/index.js",
+    "limit": "300 KB"
+  },
+  {
+    "name": "Communication Service Bundle",
+    "path": "packages/services/communication/dist/index.js",
+    "limit": "250 KB"
+  },
+  {
+    "name": "Category Service Bundle",
+    "path": "packages/services/category/dist/index.js",
+    "limit": "200 KB"
+  },
+  {
+    "name": "Business Service Bundle",
+    "path": "packages/services/business/dist/index.js",
+    "limit": "250 KB"
+  },
+  {
+    "name": "Shared Package",
+    "path": "packages/shared/dist/index.js",
+    "limit": "150 KB"
+  }
+]

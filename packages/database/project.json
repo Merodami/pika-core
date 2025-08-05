@@ -1,0 +1,66 @@
+{
+  "name": "@pika/database",
+  "root": "packages/database",
+  "sourceRoot": "packages/database/src",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": ["@pika/environment", "@pika/types"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p tsconfig.json --noEmit",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "depcheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "yarn knip --workspace={projectName}",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -rf dist && tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
+        "outputs": ["{projectRoot}/dist"],
+        "cwd": "{projectRoot}"
+      }
+    },
+    "local": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p tsconfig.json --watch --preserveWatchOutput",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "prisma:generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx prisma/merge.ts && prisma generate --schema=prisma/schema.prisma",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "prisma:migrate:dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx prisma/merge.ts && prisma migrate dev --schema=prisma/schema.prisma",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "prisma:migrate:deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prisma migrate deploy --schema=prisma/schema.prisma",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "prisma:seed": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsx prisma/seed/index.ts"],
+        "cwd": "{projectRoot}"
+      }
+    }
+  }
+}

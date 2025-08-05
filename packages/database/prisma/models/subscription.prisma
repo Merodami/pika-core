@@ -1,0 +1,26 @@
+/// Subscription models
+model SubscriptionPlan {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String   @unique
+  description      String?
+  price            Float    // Price per billing period
+  currency         String   @default("usd")
+  intervalCount    Int      @default(1) @map("interval_count")
+  // Credits feature removed - no longer needed
+  trialPeriodDays  Int?     @map("trial_period_days")
+  features         String[] // Array of feature descriptions
+  isActive         Boolean  @default(true) @map("is_active")
+  metadata         Json?    // Additional configuration
+  stripeProductId  String?  @unique @map("stripe_product_id")
+  stripePriceId    String?  @unique @map("stripe_price_id")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @default(now()) @map("updated_at") @db.Timestamptz(6) @updatedAt
+
+  // Relations
+  subscriptions Subscription[]
+
+  @@index([isActive])
+  @@map("subscription_plans")
+  @@schema("payments")
+}
+

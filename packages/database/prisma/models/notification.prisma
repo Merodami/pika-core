@@ -1,0 +1,24 @@
+/// Notifications - In-app notifications for users
+model Notification {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  type        String   @db.VarChar(50) // email, session_invitation, session_cancelled, etc.
+  title       String   @db.VarChar(255)
+  description String   @db.Text
+  isRead      Boolean  @default(false) @map("is_read")
+  metadata    Json?    @db.JsonB // Additional notification data
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime? @default(now()) @map("updated_at") @db.Timestamptz(6) @updatedAt
+  readAt      DateTime? @map("read_at") @db.Timestamptz(6)
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Indexes
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@index([type])
+
+  @@map("notifications")
+  @@schema("support")
+}

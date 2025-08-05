@@ -1,0 +1,53 @@
+version: 2
+updates:
+  # Enable version updates for Flutter/Dart dependencies
+  - package-ecosystem: 'pub'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+    open-pull-requests-limit: 10
+    # Group updates to reduce PR noise
+    groups:
+      firebase:
+        patterns:
+          - 'firebase_*'
+          - 'cloud_firestore'
+        update-types:
+          - 'minor'
+          - 'patch'
+      flutter-ui:
+        patterns:
+          - 'flutter_animate'
+          - 'cached_network_image'
+          - 'flutter_svg'
+          - 'shimmer'
+        update-types:
+          - 'minor'
+          - 'patch'
+      dev-dependencies:
+        patterns:
+          - '*'
+        dependency-type: 'development'
+        update-types:
+          - 'minor'
+          - 'patch'
+    # Ignore specific dependencies that might break
+    ignore:
+      # Major version updates that need manual review
+      - dependency-name: 'freezed_annotation'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'analyzer'
+        update-types: ['version-update:semver-major']
+    # Labels to automatically add to PRs
+    labels:
+      - 'dependencies'
+      - 'flutter'
+    # Reviewers to automatically assign
+    reviewers:
+      - 'damian' # Replace with your GitHub username
+    # Commit message customization
+    commit-message:
+      prefix: 'chore'
+      include: 'scope'

@@ -1,0 +1,37 @@
+/// File Storage Log - Tracks all file upload/download activities
+model FileStorageLog {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fileId           String   @map("file_id") @db.Uuid // Unique file identifier
+  fileName         String   @map("file_name") @db.VarChar(255) // Original filename
+  contentType      String   @map("content_type") @db.VarChar(100) // MIME type
+  size             Int      @db.Integer // File size in bytes
+  folder           String?  @db.VarChar(255) // Storage folder/path
+  isPublic         Boolean  @default(false) @map("is_public") // Public access flag
+  url              String   @db.Text // File URL (signed or public)
+  storageKey       String?  @map("storage_key") @db.Text // Full storage path/key for provider
+  status           String   @db.VarChar(20) // uploaded, failed, deleted
+  userId           String?  @map("user_id") @db.Uuid // Nullable for system uploads
+  metadata         Json?    @db.JsonB // Additional file metadata
+  provider         String?  @db.VarChar(50) // aws-s3, local, console
+  uploadedAt       DateTime? @map("uploaded_at") @db.Timestamptz(6)
+  deletedAt        DateTime? @map("deleted_at") @db.Timestamptz(6)
+  errorMessage     String?  @map("error_message") @db.Text
+  processingTimeMs Int?     @map("processing_time_ms") @db.Integer // Upload/processing time
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime? @default(now()) @map("updated_at") @db.Timestamptz(6) @updatedAt
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Indexes
+  @@index([userId])
+  @@index([fileId])
+  @@index([status])
+  @@index([folder])
+  @@index([contentType])
+  @@index([createdAt])
+  @@index([isPublic])
+
+  @@map("file_storage_logs")
+  @@schema("files")
+}

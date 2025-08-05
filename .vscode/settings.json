@@ -1,0 +1,102 @@
+{
+  "[dotenv]": {
+    "editor.defaultFormatter": "foxundermoon.shell-format"
+  },
+  "[toml]": {
+    "editor.defaultFormatter": "tamasfe.even-better-toml"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "cSpell.language": "en-US",
+  // Spell‑checker
+  "cSpell.words": [
+    "APIV",
+    "BANCARD",
+    "Citext",
+    "dbgenerated",
+    "depcheckrc",
+    "dtos",
+    "DVERDUE",
+    "eventbridge",
+    "fastcsv",
+    "fileb",
+    "firestore",
+    "fkill",
+    "geospatial",
+    "grafbase",
+    "HEALTHCHECK",
+    "pika",
+    "localstack",
+    "Mailhog",
+    "Millis",
+    "omnigraph",
+    "ossp",
+    "pgcrypto",
+    "Pgsql",
+    "retryable",
+    "supergraph",
+    "Timestamptz",
+    "ttls",
+    "upsells",
+    "uuidv",
+    "vitest"
+  ],
+  "editor.codeActionsOnSave": [
+    "source.fixAll.eslint",
+    "source.organizeImports"
+  ],
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+
+  "files.exclude": {
+    "**/.DS_Store": true,
+    "**/.git": true,
+    "**/coverage": true,
+    "**/node_modules": true
+  },
+  // (Optional) same for JS files if you ever edit them
+  "eslint.options": {
+    "extensions": [".js", ".jsx", ".ts", ".tsx"]
+  },
+  // Or you can lint as you type
+  "eslint.run": "onType",
+  "javascript.preferences.importModuleSpecifier": "non-relative",
+  "javascript.preferences.importModuleSpecifierEnding": "js",
+  "prisma.schemaPath": "prisma/schema.prisma",
+  "search.exclude": {
+    "**/dist": true,
+    "**/node_modules": true,
+    // This is generated data, and it clutters up search results with
+    // many matches for things that should not be edited.
+    //
+    // It is not .gitignored since it _should_ be committed to ensure
+    // stable builds, and that the project "just works" without depending
+    // on something external that can change.
+    "packages/sdk/src/openapi": true
+  },
+  "[sql]": {
+    "editor.defaultFormatter": ""
+  },
+  // When auto-importing, prefer your TS paths over relative
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  // Use the .js extension at the end of imports (since your build emits .js)
+  "typescript.preferences.importModuleSpecifierEnding": "js",
+  // Point to your workspace TS, so VSCode uses the right TS version
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "eslint.useFlatConfig": true,
+
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+
+  "eslint.workingDirectories": [
+    {
+      "directory": "packages/**/*",
+      "changeProcessCWD": true
+    }
+  ]
+}

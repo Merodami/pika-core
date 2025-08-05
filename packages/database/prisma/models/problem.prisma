@@ -1,0 +1,36 @@
+model Problem {
+  id          String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String          @map("user_id") @db.Uuid
+  title       String          @db.VarChar(255)
+  description String          @db.Text
+  status      ProblemStatus   @default(open)
+  priority    ProblemPriority @default(medium)
+  type        ProblemType     @default(general)
+  createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime?       @default(now()) @map("updated_at") @db.Timestamptz(6) @updatedAt
+  resolvedAt  DateTime?       @map("resolved_at") @db.Timestamptz(6)
+
+  // Essential admin fields
+  ticketNumber String? @unique @map("ticket_number") @db.VarChar(20)
+  assignedTo   String? @map("assigned_to") @db.Uuid
+
+  // File attachments
+  files String[] @default([])
+
+  // Relations
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignedUser User?            @relation("AssignedProblems", fields: [assignedTo], references: [id], onDelete: SetNull)
+  comments     SupportComment[]
+
+  // Indexes
+  @@index([userId])
+  @@index([status])
+  @@index([priority])
+  @@index([type])
+  @@index([assignedTo])
+  @@index([ticketNumber])
+  @@index([createdAt])
+  
+  @@map("problems")
+  @@schema("support")
+}

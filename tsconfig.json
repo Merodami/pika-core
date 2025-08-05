@@ -1,0 +1,85 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022", "dom"],
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "useUnknownInCatchVariables": false,
+    "isolatedModules": true,
+    "newLine": "lf",
+    "declaration": true,
+    "declarationMap": true,
+    "incremental": true,
+    "sourceMap": true,
+    "noEmit": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["packages/shared/src/*"],
+      "@api/*": ["packages/api/src/*"],
+      "@types/*": ["packages/types/src/*"],
+      "@sdk/*": ["packages/sdk/src/*"],
+      "@api-gateway/*": ["packages/api-gateway/src/*"],
+      "@database/*": ["packages/database/src/*"],
+      "@redis/*": ["packages/redis/src/*"],
+      "@http/*": ["packages/http/src/*"],
+      "@auth/*": ["packages/auth/src/*"],
+      "@tests/*": ["packages/tests/src/*"],
+      "@environment/*": ["packages/environment/src/*"],
+      "@user/*": ["packages/services/user/src/*"],
+      "@auth-service/*": ["packages/services/auth/src/*"],
+      "@subscription/*": ["packages/services/subscription/src/*"],
+      "@payment/*": ["packages/services/payment/src/*"],
+      "@communication/*": ["packages/services/communication/src/*"],
+      "@support/*": ["packages/services/support/src/*"],
+      "@storage/*": ["packages/services/storage/src/*"],
+      "@business/*": ["packages/services/business/src/*"],
+      "@category/*": ["packages/services/category/src/*"],
+      "@pdf/*": ["packages/services/pdf/src/*"],
+      "@voucher/*": ["packages/services/voucher/src/*"]
+    }
+  },
+  "exclude": [
+    "**/dist",
+    "node_modules",
+    "previous-architecture",
+    "ai",
+    "pika-old"
+  ],
+  "references": [
+    // Core packages
+    { "path": "packages/types" },
+    { "path": "packages/shared" },
+    { "path": "packages/environment" },
+    // Infrastructure
+    { "path": "packages/database" },
+    { "path": "packages/redis" },
+    { "path": "packages/http" },
+    { "path": "packages/auth" },
+    // API and SDK
+    { "path": "packages/api" },
+    { "path": "packages/sdk" },
+    { "path": "packages/api-gateway" },
+    // Testing
+    { "path": "packages/tests" },
+    // Services
+    { "path": "packages/services/user" },
+    { "path": "packages/services/auth" },
+    { "path": "packages/services/business" },
+    { "path": "packages/services/category" },
+    { "path": "packages/services/communication" },
+    { "path": "packages/services/payment" },
+    { "path": "packages/services/pdf" },
+    { "path": "packages/services/storage" },
+    { "path": "packages/services/subscription" },
+    { "path": "packages/services/support" },
+    { "path": "packages/services/voucher" }
+  ]
+}

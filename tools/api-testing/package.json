@@ -1,0 +1,24 @@
+{
+  "name": "@pika/api-testing-tools",
+  "version": "0.0.0",
+  "private": true,
+  "description": "API testing tools and utilities",
+  "type": "module",
+  "scripts": {
+    "generate:tokens": "tsx generate-test-tokens.ts",
+    "show:tokens": "tsx show-test-tokens.ts"
+  },
+  "dependencies": {
+    "@faker-js/faker": "^9.9.0",
+    "@pika/environment": "workspace:^",
+    "@pika/types": "workspace:^",
+    "@prisma/client": "^6.12.0",
+    "axios": "^1.11.0",
+    "bcrypt": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}

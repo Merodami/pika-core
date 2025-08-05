@@ -1,0 +1,63 @@
+{
+  "name": "@pika/user",
+  "version": "0.0.0",
+  "private": true,
+  "description": "User Service for Pika Platform",
+  "author": "Damian Meroni",
+  "type": "module",
+  "main": "dist/index.js",
+  "dependencies": {
+    "@pika/api": "workspace:^",
+    "@pika/auth": "workspace:^",
+    "@pika/database": "workspace:^",
+    "@pika/environment": "workspace:^",
+    "@pika/http": "workspace:^",
+    "@pika/redis": "workspace:^",
+    "@pika/sdk": "workspace:^",
+    "@pika/shared": "workspace:^",
+    "@pika/types": "workspace:^",
+    "@prisma/client": "^6.12.0",
+    "@types/bcrypt": "^6.0.0",
+    "@types/multer": "^2.0.0",
+    "bcrypt": "^6.0.0",
+    "close-with-grace": "^2.2.0",
+    "dotenv": "^17.2.1",
+    "fp-ts": "^2.16.10",
+    "io-ts": "^2.2.22",
+    "lodash-es": "^4.17.21",
+    "multer": "^2.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.1.0",
+    "@types/supertest": "^6.0.3",
+    "he": "^1.2.0",
+    "io-ts-types": "^0.5.19",
+    "supertest": "^7.1.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  },
+  "depcheck": {
+    "ignore": [
+      "nx",
+      "ts-node",
+      "tsconfig-paths"
+    ],
+    "parsers": {
+      "**/*.ts": "typescript"
+    },
+    "detectors": [
+      "requireCallExpression",
+      "importDeclaration",
+      "typescriptImportEqualsDeclaration"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pika/pika.git",
+    "directory": "packages/services/user"
+  },
+  "homepage": "https://github.com/pikaipikae/main/packages/services/user",
+  "bugs": {
+    "url": "https://github.com/pikaipikaues"
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "forbidden": [
+    {
+      "name": "no-circular",
+      "severity": "error",
+      "comment": "Circular dependencies lead to maintenance issues and should be avoided",
+      "from": {},
+      "to": {
+        "circular": true
+      }
+    },
+    {
+      "name": "no-orphans",
+      "severity": "warn",
+      "comment": "Files that are not imported by any other file in the codebase",
+      "from": {
+        "orphan": true,
+        "pathNot": [
+          "(^|/)\\.[^/]+\\.(js|ts|json)$",
+          "\\.(test|spec|integration-test)\\.(js|ts)$",
+          "(^|/)index\\.(js|ts)$",
+          "(^|/)server\\.(js|ts)$",
+          "(^|/)app\\.(js|ts)$",
+          "scripts/",
+          "tools/",
+          "\\.d\\.ts$"
+        ]
+      },
+      "to": {}
+    },
+    {
+      "name": "no-service-cross-dependencies",
+      "severity": "error",
+      "comment": "Services should not directly depend on each other - use service clients via @pika/shared",
+      "from": {
+        "path": "^packages/services/[^/]+/"
+      },
+      "to": {
+        "path": "^packages/services/(?!$from)/"
+      }
+    },
+    {
+      "name": "clean-architecture-layers",
+      "severity": "error",
+      "comment": "Controllers should not import from repositories directly",
+      "from": {
+        "path": "/controllers/"
+      },
+      "to": {
+        "path": "/repositories/"
+      }
+    },
+    {
+      "name": "no-dev-dependencies-in-production",
+      "severity": "error",
+      "comment": "Production code should not depend on dev dependencies",
+      "from": {
+        "pathNot": "\\.(test|spec|integration-test)\\.(js|ts)$"
+      },
+      "to": {
+        "dependencyTypes": ["npm-dev"]
+      }
+    }
+  ],
+  "options": {
+    "doNotFollow": {
+      "path": [
+        "node_modules",
+        "dist",
+        "build",
+        ".next",
+        "previous-architecture",
+        "pika-old"
+      ]
+    },
+    "tsPreCompilationDeps": true,
+    "tsConfig": {
+      "fileName": "./tsconfig.json"
+    },
+    "enhancedResolveOptions": {
+      "exportsFields": ["exports"],
+      "conditionNames": ["import", "require", "node", "default", "types"],
+      "extensions": [".js", ".ts", ".tsx", ".jsx", ".json"]
+    },
+    "reporterOptions": {
+      "dot": {
+        "collapsePattern": "node_modules/(@[^/]+/[^/]+|[^/]+)",
+        "theme": {
+          "graph": {
+            "rankdir": "TB"
+          }
+        }
+      },
+      "text": {
+        "highlightFocused": true
+      }
+    }
+  }
+}

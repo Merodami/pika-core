@@ -1,0 +1,102 @@
+# Production Build Optimization - Pika
+# Excludes ~85% of files, reducing 1.4GB → ~200MB
+
+# ================================
+# SOURCE CODE (TypeScript)
+# ================================
+**/src
+**/*.ts
+!**/*.d.ts
+**/tsconfig*.json
+*.tsbuildinfo
+**/.tsbuildinfo
+
+# ================================
+# TESTING & DEVELOPMENT
+# ================================
+**/test
+**/tests
+**/*.test.*
+**/*.spec.*
+**/vitest.config.*
+**/jest.config.*
+**/__tests__
+**/__mocks__
+
+# ================================
+# DEVELOPMENT DEPENDENCIES
+# ================================
+node_modules/@types
+node_modules/typescript
+node_modules/vitest
+node_modules/jest
+node_modules/eslint
+node_modules/prettier
+node_modules/@typescript-eslint
+node_modules/@nx
+
+# ================================
+# BUILD SYSTEM & TOOLING
+# ================================
+.nx/
+nx.json
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ================================
+# DOCUMENTATION & META
+# ================================
+README.md
+CLAUDE.md
+docs/
+ai/
+previous-architecture/
+pika/
+LICENSE
+*.md
+!packages/*/package.json
+
+# ================================
+# DEVELOPMENT ENVIRONMENT
+# ================================
+.env.local
+.env.test
+.env.development
+.github/
+.git/
+.gitignore
+.husky/
+*.log
+logs/
+coverage/
+
+# ================================
+# TEMP & CACHE FILES
+# ================================
+.cache/
+.tmp/
+temp/
+dist/**/*.map
+**/*.tsbuildinfo
+
+# ================================
+# OS & EDITOR FILES
+# ================================
+.DS_Store
+Thumbs.db
+*.pid
+*.seed
+*.pid.lock
+
+# ================================
+# KEEP THESE (Production Essentials)
+# ================================
+# packages/*/dist/          - Compiled JavaScript
+# packages/*/package.json   - Runtime dependencies  
+# yarn.lock                 - Exact versions
+# .yarnrc.yml               - Yarn config
+# packages/database/prisma/ - Schema & migrations
+# .env.production           - Production environment

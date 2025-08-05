@@ -1,0 +1,32 @@
+{
+  "name": "@pika/translation",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Translation and internationalization services for Pika platform",
+  "author": "Damian Meroni",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@pika/database": "workspace:^",
+    "@pika/environment": "workspace:^",
+    "@pika/redis": "workspace:^",
+    "@pika/types": "workspace:^",
+    "@prisma/client": "^6.12.0",
+    "ioredis": "^5.6.1",
+    "lodash-es": "^4.17.21"
+  },
+  "devDependencies": {
+    "tsc-alias": "^1.8.16",
+    "typescript": "^5.8.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pika/pika.git",
+    "directory": "packages/translation"
+  },
+  "homepage": "https://github.com/pikaipikae/main/packages/translation",
+  "bugs": {
+    "url": "https://github.com/pikaipikaues"
+  }
+}

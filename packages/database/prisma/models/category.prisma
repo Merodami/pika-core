@@ -1,0 +1,38 @@
+/// Category - Hierarchical categorization system
+model Category {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nameKey     String    @map("name_key") @db.VarChar(255) // Translation key for name: category.name.{id}
+  descriptionKey String? @map("description_key") @db.VarChar(255) // Translation key for description: category.description.{id}
+  icon        String?   @db.VarChar(255) // Icon URL or identifier
+  parentId    String?   @map("parent_id") @db.Uuid // Self-referencing for hierarchy
+  isActive    Boolean   @default(true) @map("is_active")
+  sortOrder   Int       @default(0) @map("sort_order")
+  slug        String    @unique @db.VarChar(255) // URL-friendly identifier
+  level       Int       @default(1) // 1 for root categories, 2+ for subcategories
+  path        String    @default("") @db.VarChar(1000) // Materialized path (e.g., "id1.id2.id3")
+  createdBy   String    @map("created_by") @db.Uuid // User who created the category
+  updatedBy   String?   @map("updated_by") @db.Uuid // User who last updated the category
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime? @default(now()) @map("updated_at") @db.Timestamptz(6) @updatedAt
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  businesses  Business[]
+  vouchers    Voucher[]  // Vouchers in this category
+
+  // Indexes
+  @@index([parentId])
+  @@index([isActive, deletedAt])
+  @@index([sortOrder])
+  @@index([nameKey])
+  @@index([slug])
+  @@index([level])
+  @@index([path])
+  @@index([parentId, isActive, deletedAt])
+  @@index([level, sortOrder])
+
+  @@map("categories")
+  @@schema("catalog")
+}

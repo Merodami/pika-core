@@ -1,0 +1,83 @@
+{
+  "buildCommand": "yarn build:vercel && cp -r node_modules/.prisma api/",
+  "outputDirectory": ".",
+  "installCommand": "yarn install --immutable",
+  "framework": null,
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 30,
+      "memory": 3008,
+      "includeFiles": "packages/**/dist/**"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/health",
+      "destination": "/api"
+    },
+    {
+      "source": "/api/v1/:path*",
+      "destination": "/api"
+    },
+    {
+      "source": "/auth/:path*",
+      "destination": "/api"
+    },
+    {
+      "source": "/users/:path*",
+      "destination": "/api"
+    },
+    {
+      "source": "/businesses/:path*",
+      "destination": "/api"
+    },
+    {
+      "source": "/categories/:path*",
+      "destination": "/api"
+    },
+    {
+      "source": "/payments/:path*",
+      "destination": "/api"
+    },
+    {
+      "source": "/subscriptions/:path*",
+      "destination": "/api"
+    },
+    {
+      "source": "/communications/:path*",
+      "destination": "/api"
+    },
+    {
+      "source": "/support/:path*",
+      "destination": "/api"
+    },
+    {
+      "source": "/storage/:path*",
+      "destination": "/api"
+    },
+    {
+      "source": "/pdf/:path*",
+      "destination": "/api"
+    },
+    {
+      "source": "/vouchers/:path*",
+      "destination": "/api"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "DEPLOYMENT_PLATFORM": "vercel"
+  },
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  },
+  "build": {
+    "env": {
+      "PRISMA_GENERATE_SKIP_AUTOINSTALL": "true",
+      "SKIP_POSTINSTALL": "true",
+      "GIT_SUBMODULE_STRATEGY": "none"
+    }
+  }
+}

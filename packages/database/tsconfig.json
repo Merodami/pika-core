@@ -1,0 +1,51 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "composite": true,
+    "tsBuildInfoFile": "dist/.tsbuildinfo",
+    "baseUrl": ".",
+    "paths": {
+      // API
+      "@database/api/*": ["src/api/*"],
+
+      // Application
+      "@database/application/*": ["src/application/*"],
+
+      // Domain
+      "@database/domain/*": ["src/domain/*"],
+
+      // Infrastructure
+      "@database/infrastructure/*": ["src/infrastructure/*"],
+
+      // Port
+      "@database/port/*": ["src/port/*"],
+
+      // Shared
+      "@database/shared/*": ["src/shared/*"],
+
+      // Test utils
+      "@database/testUtils/*": ["src/testUtils/*"],
+
+      // Mocks
+      "@database/mocks/*": ["src/mocks/*"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["dist", "../../node_modules", "node_modules"],
+  "references": [
+    {
+      "path": "../shared"
+    },
+    {
+      "path": "../types"
+    },
+    {
+      "path": "../sdk"
+    },
+    {
+      "path": "../environment"
+    }
+  ]
+}

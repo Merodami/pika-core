@@ -1,0 +1,36 @@
+/// Business profiles for service providers
+model Business {
+  id                     String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                 String    @unique @map("user_id") @db.Uuid
+  businessNameKey        String    @map("business_name_key") @db.VarChar(255) // Translation key for multilingual names
+  businessDescriptionKey String?   @map("business_description_key") @db.VarChar(255) // Translation key for multilingual descriptions
+  categoryId             String    @map("category_id") @db.Uuid
+  verified               Boolean   @default(false)
+  active                 Boolean   @default(true)
+  avgRating              Decimal   @default(0) @map("avg_rating") @db.Decimal(3, 2)
+  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt              DateTime? @map("deleted_at") @db.Timestamptz(6)
+  // TODO
+  // Add social media links
+  // Add business hours
+  // Add business address
+  // Add business phone number
+  // Add business email
+  // Add business website
+  // Add business logo
+
+  // Relations
+  user        User          @relation(fields: [userId], references: [id])
+  category    Category      @relation(fields: [categoryId], references: [id])
+  vouchers    Voucher[]     // Vouchers created by this business
+  scans       VoucherScan[] // Scans that happened at this business location
+  fraudCases  FraudCase[]   // Fraud cases involving this business
+
+  @@index([categoryId])
+  @@index([verified, active])
+  @@index([avgRating])
+  @@index([deletedAt])
+  @@map("businesses")
+  @@schema("marketplace")
+}

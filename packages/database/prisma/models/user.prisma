@@ -1,0 +1,72 @@
+/// Users
+model User {
+  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email             String            @unique
+  emailVerified     Boolean           @default(false) @map("email_verified")
+  password          String?
+  firstName         String            @map("first_name") @db.VarChar(100)
+  lastName          String            @map("last_name") @db.VarChar(100)
+  phoneNumber       String?           @map("phone_number") @db.VarChar(50)
+  phoneVerified     Boolean           @default(false) @map("phone_verified")
+  avatarUrl         String?           @map("avatar_url") @db.VarChar(1000)
+  role              UserRole          @default(customer)
+  status            UserStatus        @default(active)
+  lastLoginAt       DateTime?         @map("last_login_at") @db.Timestamptz(6)
+  createdAt         DateTime?         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime?         @default(now()) @map("updated_at") @db.Timestamptz(6) @updatedAt
+  deletedAt         DateTime?         @map("deleted_at") @db.Timestamptz(6)
+  
+  // Additional fields
+  dateOfBirth       DateTime?         @map("date_of_birth") @db.Date
+  stripeUserId      String?           @map("stripe_user_id") @db.VarChar(255)
+
+  // Relations
+  addresses         Address[]
+  problems          Problem[]
+  
+  // Enhanced authentication relations
+  identities        UserIdentity?
+  authMethods       UserAuthMethod[]
+  devices           UserDevice[]
+  mfaSettings       UserMfaSettings?
+  securityEvents    SecurityEvent[]
+  
+  // Payment relations
+  subscriptions     Subscription[]
+  
+  // Communication relations
+  notifications     Notification[]
+  communicationLogs CommunicationLog[]
+  
+  // File Storage relations
+  fileStorageLogs   FileStorageLog[]
+  
+  // Support relations
+  supportComments   SupportComment[]
+  assignedProblems  Problem[]         @relation("AssignedProblems")
+  
+  // Business relations
+  business          Business?
+  
+  // PDF relations
+  createdVoucherBooks   VoucherBook[]     @relation("VoucherBookCreatedBy")
+  updatedVoucherBooks   VoucherBook[]     @relation("VoucherBookUpdatedBy")
+  createdAdPlacements   AdPlacement[]     @relation("AdPlacementCreatedBy")
+  updatedAdPlacements   AdPlacement[]     @relation("AdPlacementUpdatedBy")
+  createdDistributions  BookDistribution[] @relation("BookDistributionCreatedBy")
+  updatedDistributions  BookDistribution[] @relation("BookDistributionUpdatedBy")
+  
+  // Voucher system relations
+  voucherRedemptions    VoucherRedemption[] // Vouchers redeemed by this user
+  customerVouchers      CustomerVoucher[]   // Vouchers claimed by this customer
+  voucherScans          VoucherScan[]       // Voucher scans performed by this user
+  customerFraudCases    FraudCase[]         @relation("FraudCaseCustomer") // Fraud cases involving this user as customer
+  reviewedFraudCases    FraudCase[]         @relation("FraudCaseReviewer") // Fraud cases reviewed by this user
+  fraudCaseHistory      FraudCaseHistory[]  // Fraud case actions performed by this user
+
+  @@index([email])
+  @@index([phoneNumber])
+  @@index([deletedAt])
+  @@map("users")
+  @@schema("users")
+}

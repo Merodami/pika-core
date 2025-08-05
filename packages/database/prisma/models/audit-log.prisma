@@ -1,0 +1,16 @@
+// Audit logs for tracking changes
+model AuditLog {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  entityType      String          @map("entity_type") @db.VarChar(50)
+  entityId        String          @map("entity_id") @db.Uuid
+  action          AuditAction
+  userId          String?         @map("user_id") @db.Uuid
+  data            Json?
+  createdAt       DateTime?        @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
+  @@schema("audit")
+}

@@ -1,0 +1,53 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "composite": true,
+    "tsBuildInfoFile": "dist/.tsbuildinfo",
+    "baseUrl": ".",
+    "paths": {
+      "@user/*": ["src/*"],
+      "@user-read/*": ["src/read/*"],
+      "@user-write/*": ["src/write/*"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "dist",
+    "../../node_modules",
+    "node_modules",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/tests/**"
+  ],
+  "references": [
+    {
+      "path": "../../types"
+    },
+    {
+      "path": "../../shared"
+    },
+    {
+      "path": "../../sdk"
+    },
+    {
+      "path": "../../api"
+    },
+    {
+      "path": "../../database"
+    },
+    {
+      "path": "../../auth"
+    },
+    {
+      "path": "../../http"
+    },
+    {
+      "path": "../../tests"
+    },
+    {
+      "path": "../../redis"
+    }
+  ]
+}

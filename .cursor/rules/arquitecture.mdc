@@ -1,0 +1,6 @@
+---
+description: 
+globs: *.ts
+alwaysApply: false
+---
+Remember that we are working on an architecture based on DDD + CQRS + Hexagonal architecture

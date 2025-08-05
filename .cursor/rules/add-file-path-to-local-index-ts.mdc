@@ -1,0 +1,6 @@
+---
+description: 
+globs: *.ts
+alwaysApply: false
+---
+Every time you create a file in a location, validate if a index.ts exists on the same level, and add the file path inside the index.ts.

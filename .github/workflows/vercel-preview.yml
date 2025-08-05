@@ -1,0 +1,128 @@
+name: Vercel Preview Deployment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  REDIS_URL: ${{ secrets.REDIS_URL }}
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
+  JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+  INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@4.9.1 --activate
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run validation script
+        run: ./scripts/validate-deployment.sh
+
+      - name: Run deployment tests
+        run: |
+          yarn add -D ora chalk
+          yarn tsx scripts/vercel-test.ts
+
+  deploy-preview:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@4.9.1 --activate
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Pull Vercel Environment
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel
+        id: deploy
+        run: |
+          DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "deployment-url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+
+          # Set alias for the PR
+          ALIAS="pika-pr-${{ github.event.pull_request.number }}"
+          vercel alias set $DEPLOYMENT_URL $ALIAS.vercel.app --token=${{ secrets.VERCEL_TOKEN }}
+          echo "alias-url=https://$ALIAS.vercel.app" >> $GITHUB_OUTPUT
+
+      - name: Run smoke tests
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
+        run: |
+          # Wait for deployment to be ready
+          sleep 30
+
+          # Test health endpoint
+          curl -f -s "$DEPLOYMENT_URL/health" || exit 1
+
+          # Test a few key endpoints
+          curl -f -s "$DEPLOYMENT_URL/auth/health" || exit 1
+          curl -f -s "$DEPLOYMENT_URL/users/health" || exit 1
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deploymentUrl = '${{ steps.deploy.outputs.deployment-url }}';
+            const aliasUrl = '${{ steps.deploy.outputs.alias-url }}';
+
+            const comment = `
+            ## 🚀 Vercel Preview Deployment
+
+            ✅ **Preview**: ${deploymentUrl}
+            🔗 **Alias**: ${aliasUrl}
+
+            ### Deployment Status
+            - Build: ✅ Success
+            - Health Check: ✅ Passing
+            - Smoke Tests: ✅ Passing
+
+            ### Test the deployment:
+            \`\`\`bash
+            # Health check
+            curl ${aliasUrl}/health
+
+            # API documentation
+            open ${aliasUrl}/api/docs
+            \`\`\`
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

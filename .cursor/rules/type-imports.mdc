@@ -1,0 +1,6 @@
+---
+description: 
+globs: *
+alwaysApply: false
+---
+When importing, if is an interface or type, we should import it as "type"

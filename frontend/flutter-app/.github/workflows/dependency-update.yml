@@ -1,0 +1,100 @@
+name: Flutter Dependency Updates
+
+on:
+  schedule:
+    # Run every Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+    inputs:
+      update_type:
+        description: 'Update type'
+        required: true
+        default: 'safe'
+        type: choice
+        options:
+          - safe
+          - minor
+          - major
+
+jobs:
+  update-dependencies:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.x'
+          channel: 'stable'
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Check outdated packages
+        run: |
+          echo "### 📦 Outdated Packages Report" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          flutter pub outdated >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Update dependencies
+        run: |
+          UPDATE_TYPE="${{ github.event.inputs.update_type || 'safe' }}"
+
+          if [ "$UPDATE_TYPE" = "safe" ] || [ "$UPDATE_TYPE" = "minor" ]; then
+            flutter pub upgrade --no-example
+          elif [ "$UPDATE_TYPE" = "major" ]; then
+            flutter pub upgrade --major-versions --no-example
+          fi
+
+      - name: Run tests
+        run: flutter test
+        continue-on-error: true
+        id: test_result
+
+      - name: Run analyzer
+        run: flutter analyze
+        continue-on-error: true
+        id: analyze_result
+
+      - name: Create Pull Request
+        if: steps.test_result.outcome == 'success' && steps.analyze_result.outcome == 'success'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore(deps): update Flutter dependencies'
+          title: '🔄 Update Flutter Dependencies'
+          body: |
+            ## 🚀 Automated Dependency Update
+
+            This PR was automatically created to update Flutter dependencies.
+
+            ### Update Type: ${{ github.event.inputs.update_type || 'safe' }}
+
+            ### ✅ Checks Passed:
+            - Flutter tests
+            - Flutter analyzer
+
+            ### 📋 Updated Packages:
+            See the changes in `pubspec.lock` for details.
+
+            ---
+            Please review the changes before merging.
+          branch: update-flutter-dependencies
+          delete-branch: true
+          labels: |
+            dependencies
+            flutter
+            automated
+
+      - name: Report failure
+        if: steps.test_result.outcome == 'failure' || steps.analyze_result.outcome == 'failure'
+        run: |
+          echo "### ❌ Update Failed" >> $GITHUB_STEP_SUMMARY
+          echo "Tests or analysis failed after dependency update." >> $GITHUB_STEP_SUMMARY
+          exit 1

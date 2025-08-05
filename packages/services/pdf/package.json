@@ -1,0 +1,67 @@
+{
+  "name": "@pika/pdf",
+  "version": "0.0.0",
+  "private": true,
+  "description": "PDF Generation Service for Pika Platform",
+  "author": "Damian Meroni",
+  "type": "module",
+  "main": "dist/index.js",
+  "dependencies": {
+    "@pika/api": "workspace:^",
+    "@pika/auth": "workspace:^",
+    "@pika/database": "workspace:^",
+    "@pika/environment": "workspace:^",
+    "@pika/http": "workspace:^",
+    "@pika/redis": "workspace:^",
+    "@pika/sdk": "workspace:^",
+    "@pika/shared": "workspace:^",
+    "@pika/tests": "workspace:^",
+    "@pika/types": "workspace:^",
+    "@prisma/client": "^6.12.0",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "lodash-es": "^4.17.21",
+    "pdfkit": "^0.17.1",
+    "qrcode": "^1.5.4",
+    "sharp": "^0.34.3",
+    "uuid": "^11.1.0",
+    "zod": "^4.0.10"
+  },
+  "devDependencies": {
+    "@types/node": "^24.1.0",
+    "@types/pdfkit": "^0.17.2",
+    "@types/qrcode": "^1.5.5",
+    "@types/sharp": "^0.32.0",
+    "@types/supertest": "^6.0.3",
+    "@types/uuid": "^10.0.0",
+    "he": "^1.2.0",
+    "io-ts-types": "^0.5.19",
+    "supertest": "^7.1.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  },
+  "depcheck": {
+    "ignore": [
+      "nx",
+      "ts-node",
+      "tsconfig-paths"
+    ],
+    "parsers": {
+      "**/*.ts": "typescript"
+    },
+    "detectors": [
+      "requireCallExpression",
+      "importDeclaration",
+      "typescriptImportEqualsDeclaration"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pika/pika.git",
+    "directory": "packages/services/pdf"
+  },
+  "homepage": "https://github.com/pikaipikae/main/packages/services/pdf",
+  "bugs": {
+    "url": "https://github.com/pikaipikaues"
+  }
+}

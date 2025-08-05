@@ -1,0 +1,37 @@
+name: 'Setup Caches'
+description: 'Setup Yarn and NX caches for the workflow'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Get yarn cache directory
+      id: yarn-cache-dir
+      shell: bash
+      run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
+
+    - name: Cache yarn dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ steps.yarn-cache-dir.outputs.dir }}
+          .yarn/unplugged
+          .yarn/install-state.gz
+        key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock', '.yarnrc.yml') }}
+        restore-keys: |
+          ${{ runner.os }}-yarn-
+
+    - name: Cache NX
+      uses: actions/cache@v4
+      with:
+        path: .nx/cache
+        key: ${{ runner.os }}-nx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-nx-
+
+    - name: Cache Prisma engines
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/prisma
+        key: ${{ runner.os }}-prisma-${{ hashFiles('**/prisma/schema.prisma') }}
+        restore-keys: |
+          ${{ runner.os }}-prisma-

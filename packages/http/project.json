@@ -1,0 +1,33 @@
+{
+  "name": "@pika/http",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -rf dist && tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
+        "cwd": "{projectRoot}"
+      },
+      "outputs": ["{projectRoot}/dist"]
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p tsconfig.json --noEmit",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "local": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p tsconfig.json --watch --preserveWatchOutput",
+          "tsc-alias -p tsconfig.json --watch"
+        ],
+        "parallel": true,
+        "cwd": "{projectRoot}"
+      }
+    }
+  }
+}

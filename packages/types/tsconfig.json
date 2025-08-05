@@ -1,0 +1,34 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "composite": true,
+    "declaration": true,
+    "tsBuildInfoFile": "dist/.tsbuildinfo",
+    "declarationDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      // API
+      "@types/controllers/*": ["src/api/controllers/*"],
+      "@types/routes/*": ["src/api/routes/*"],
+
+      // Application
+      "@types/dto/*": ["src/application/dtos/*"],
+      "@types/use_cases/*": ["src/application/use_cases/*"],
+      "@types/commands/*": ["src/application/use_cases/commands/*"],
+      "@types/queries/*": ["src/application/use_cases/queries/*"],
+
+      // Domain
+      "@types/entities/*": ["src/domain/entities/*"],
+      "@types/repositories/*": ["src/domain/repositories/*"],
+      "@types/value_objects/*": ["src/domain/value_objects/*"],
+
+      // Infrastructure
+      "@types/database/*": ["src/infrastructure/database/*"],
+      "@types/persistence/*": ["src/infrastructure/persistence/*"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["../../node_modules", "node_modules"]
+}

@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+  <head>
+    <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+    <base href="$FLUTTER_BASE_HREF" />
+
+    <meta charset="UTF-8" />
+    <meta content="IE=Edge" http-equiv="X-UA-Compatible" />
+    <meta name="description" content="A new Flutter project." />
+
+    <!-- Google Sign-In meta tag for web -->
+    <meta
+      name="google-signin-client_id"
+      content="303337225326-k8loau7k864meep8i0bggkqpl2nbghl7.apps.googleusercontent.com"
+    />
+
+    <!-- Facebook SDK for web (optional - only needed for mobile flow) -->
+    <script>
+      // Facebook SDK configuration - only loads if we need the mobile flow
+      // For web with Firebase emulators, we use Firebase Auth popup directly
+      window.fbAsyncInit = function () {
+        // Check if we're in development/emulator mode
+        const isEmulator =
+          window.location.hostname === 'localhost' ||
+          window.location.hostname === '127.0.0.1'
+
+        // Only initialize if we have a valid App ID (for production)
+        const appId = isEmulator
+          ? 'test-facebook-app-id'
+          : '{{FACEBOOK_APP_ID}}'
+
+        if (
+          appId &&
+          appId !== '{{FACEBOOK_APP_ID}}' &&
+          appId !== 'test-facebook-app-id'
+        ) {
+          FB.init({
+            appId: appId,
+            autoLogAppEvents: true,
+            xfbml: true,
+            version: 'v18.0',
+          })
+          console.log('Facebook SDK initialized for production')
+        } else {
+          console.log('Facebook SDK skipped - using Firebase emulator auth')
+        }
+      }
+    </script>
+    <script
+      async
+      defer
+      crossorigin="anonymous"
+      src="https://connect.facebook.net/en_US/sdk.js"
+    ></script>
+
+    <!-- iOS meta tags & icons -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="pika_app" />
+    <link rel="apple-touch-icon" href="icons/Icon-192.png" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png" />
+
+    <title>pika_app</title>
+    <link rel="manifest" href="manifest.json" />
+  </head>
+  <body>
+    <script src="flutter_bootstrap.js" async></script>
+  </body>
+</html>

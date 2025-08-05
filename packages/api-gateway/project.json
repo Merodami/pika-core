@@ -1,0 +1,36 @@
+{
+  "name": "@pika/api-gateway",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p tsconfig.json --noEmit",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "depcheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "yarn knip --workspace={projectName}",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -rf dist && tsc -p tsconfig.json",
+        "cwd": "{projectRoot}"
+      },
+      "outputs": ["{projectRoot}/dist"]
+    },
+    "local": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "sleep 5 && tsx --watch ./src/api/server.ts",
+        "cwd": "{projectRoot}"
+      }
+    }
+  }
+}

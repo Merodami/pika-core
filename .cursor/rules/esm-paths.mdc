@@ -1,0 +1,6 @@
+---
+description: 
+globs: *.ts
+alwaysApply: false
+---
+We use ESM, so imports of other ts files should end with .js when required

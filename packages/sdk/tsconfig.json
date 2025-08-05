@@ -1,0 +1,28 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "composite": true,
+    "tsBuildInfoFile": "dist/.tsbuildinfo",
+    "declaration": true,
+    "declarationDir": "dist",
+    "allowJs": false,
+    "baseUrl": ".",
+    "lib": ["ES2022", "DOM"],
+    "paths": {
+      // API
+      "@sdk/*": ["src/*"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["dist", "../../node_modules", "node_modules", "src/openapi"],
+  "references": [
+    {
+      "path": "../environment"
+    },
+    {
+      "path": "../types"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "composite": true,
+    "tsBuildInfoFile": "dist/.tsbuildinfo",
+    "declaration": true,
+    "declarationDir": "dist",
+    "allowJs": false,
+    "baseUrl": ".",
+    "paths": {
+      // API
+      "@auth/api/*": ["src/api/*"],
+
+      // Application
+      "@auth/application/*": ["src/application/*"],
+
+      // Domain
+      "@auth/domain/*": ["src/domain/*"],
+
+      // Infrastructure
+      "@auth/infrastructure/*": ["src/infrastructure/*"]
+    }
+  },
+  "include": ["src"],
+  "exclude": [
+    "dist",
+    "../../node_modules",
+    "node_modules",
+    "src/test/integration",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ],
+  "references": [
+    {
+      "path": "../shared"
+    },
+    {
+      "path": "../api"
+    },
+    {
+      "path": "../database"
+    }
+  ]
+}

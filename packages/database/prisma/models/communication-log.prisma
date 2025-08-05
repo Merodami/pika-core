@@ -1,0 +1,32 @@
+/// Communication Log - Tracks all outbound communications (emails, SMS, etc.)
+model CommunicationLog {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String?  @map("user_id") @db.Uuid // Nullable for non-user communications
+  type        String   @db.VarChar(20) // email, sms, push
+  recipient   String   @db.VarChar(255) // Email address, phone number, etc.
+  subject     String?  @db.VarChar(255)
+  templateId  String?  @map("template_id") @db.VarChar(100)
+  status      String   @db.VarChar(20) // pending, sent, delivered, failed, bounced
+  provider    String?  @db.VarChar(50) // emailjs, twilio, etc.
+  providerId  String?  @map("provider_id") @db.VarChar(255) // External provider message ID
+  metadata    Json?    @db.JsonB // Template params, error details, response data
+  sentAt      DateTime? @map("sent_at") @db.Timestamptz(6)
+  deliveredAt DateTime? @map("delivered_at") @db.Timestamptz(6)
+  failedAt    DateTime? @map("failed_at") @db.Timestamptz(6)
+  errorMessage String?  @map("error_message") @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime? @default(now()) @map("updated_at") @db.Timestamptz(6) @updatedAt
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Indexes
+  @@index([userId])
+  @@index([type, status])
+  @@index([recipient])
+  @@index([createdAt])
+  @@index([templateId])
+
+  @@map("communication_logs")
+  @@schema("support")
+}

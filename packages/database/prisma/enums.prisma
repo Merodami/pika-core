@@ -1,0 +1,225 @@
+enum UserRole {
+  admin
+  customer
+  business
+
+  @@schema("identity")
+}
+
+enum UserStatus {
+  active
+  suspended
+  banned
+  unconfirmed
+
+  @@schema("identity")
+}
+
+enum AuditAction {
+  create
+  update
+  delete
+  login
+  logout
+  status_change
+
+  @@schema("audit")
+}
+
+enum ProblemStatus {
+  open
+  assigned
+  in_progress
+  waiting_customer
+  waiting_internal
+  resolved
+  closed
+
+  @@schema("support")
+}
+
+enum ProblemPriority {
+  low
+  medium
+  high
+  urgent
+  critical
+
+  @@schema("support")
+}
+
+enum ProblemType {
+  billing
+  technical
+  account
+  general
+  bug_report
+  feature_request
+
+  @@schema("support")
+}
+
+enum NotificationStatus {
+  pending
+  sent
+  failed
+  read
+
+  @@schema("support")
+}
+
+enum NotificationType {
+  email
+  sms
+  push
+  in_app
+
+  @@schema("support")
+}
+
+enum CommunicationMethod {
+  email
+  sms
+  push
+  in_app
+
+  @@schema("support")
+}
+
+enum SubscriptionStatus {
+  active
+  canceled
+  incomplete
+  incomplete_expired
+  past_due
+  trialing
+  unpaid
+
+  @@schema("payments")
+}
+
+enum FileType {
+  image
+  video
+  document
+  audio
+  other
+
+  @@schema("files")
+}
+
+enum StorageProvider {
+  aws_s3
+  local
+  minio
+
+  @@schema("files")
+}
+
+enum VoucherBookStatus {
+  draft
+  ready_for_print
+  published
+  archived
+
+  @@schema("files")
+}
+
+enum VoucherBookType {
+  monthly
+  special_edition
+  regional
+  seasonal
+  promotional
+
+  @@schema("files")
+}
+
+enum PageLayoutType {
+  standard      // 8 spaces (2x4 grid)
+  mixed         // Mixed ad sizes
+  full_page     // Single full-page ad
+  custom        // Custom layout
+
+  @@schema("files")
+}
+
+enum AdSize {
+  single        // 1/8 page (1 space)
+  quarter       // 1/4 page (2 spaces)
+  half          // 1/2 page (4 spaces)
+  full          // Full page (8 spaces)
+
+  @@schema("files")
+}
+
+enum ContentType {
+  voucher       // Business voucher with QR code
+  image         // Static image content
+  ad            // Advertisement content
+  sponsored     // Sponsored content
+
+  @@schema("files")
+}
+
+// ===== VOUCHER SYSTEM ENUMS =====
+
+enum VoucherState {
+  draft
+  published
+  claimed
+  redeemed
+  expired
+  suspended
+
+  @@schema("business")
+}
+
+enum VoucherType {
+  percentage
+  fixed
+
+  @@schema("business")
+}
+
+enum VoucherCodeType {
+  qr            // QR code (JWT-based)
+  short         // Short alphanumeric code
+  static        // Static code (reusable)
+
+  @@schema("business")
+}
+
+enum VoucherScanType {
+  customer      // Customer scanning voucher
+  business      // Business scanning voucher for redemption
+
+  @@schema("analytics")
+}
+
+enum VoucherScanSource {
+  camera        // Scanned with camera
+  gallery       // Uploaded from gallery
+  link          // Opened via link
+  share         // Shared link/code
+
+  @@schema("analytics")
+}
+
+enum CustomerVoucherStatus {
+  claimed       // Voucher claimed to wallet
+  redeemed      // Voucher redeemed
+  expired       // Voucher expired
+
+  @@schema("business")
+}
+
+enum FraudCaseStatus {
+  pending         // Awaiting review
+  reviewing       // Under investigation
+  approved        // Marked as legitimate
+  rejected        // Confirmed fraud
+  false_positive  // Incorrectly flagged
+
+  @@schema("security")
+}

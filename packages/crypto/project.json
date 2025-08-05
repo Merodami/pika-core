@@ -1,0 +1,53 @@
+{
+  "name": "@pika/crypto",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p tsconfig.json --noEmit",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -rf dist && tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
+        "cwd": "{projectRoot}"
+      },
+      "outputs": ["{projectRoot}/dist"]
+    },
+    "local": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p tsconfig.json --watch --preserveWatchOutput",
+          "tsc-alias -p tsconfig.json --watch"
+        ],
+        "parallel": true,
+        "cwd": "{projectRoot}"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "test:watch": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "test:coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --coverage",
+        "cwd": "{projectRoot}"
+      }
+    }
+  }
+}

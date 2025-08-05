@@ -1,0 +1,156 @@
+name: PR Checks
+
+# TEMPORARILY DISABLED - Remove comments to re-enable
+# on:
+#   pull_request:
+#     types: [opened, synchronize, reopened]
+on:
+  workflow_dispatch: # Only allow manual triggering
+
+concurrency:
+  group: pr-${{ github.event.number }}
+  cancel-in-progress: true
+
+jobs:
+  # Detect what changed
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      docs: ${{ steps.filter.outputs.docs }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'packages/**'
+              - 'package.json'
+              - 'yarn.lock'
+              - 'nx.json'
+              - 'tsconfig*.json'
+            frontend:
+              - 'packages/frontend/**'
+            docs:
+              - '**.md'
+              - 'docs/**'
+
+  # Quick checks on changed files only
+  lint-changed:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - run: corepack enable
+
+      - name: Quick yarn cache
+        uses: actions/cache@v4
+        with:
+          path: .yarn/cache
+          key: ${{ runner.os }}-yarn-quick-${{ hashFiles('**/yarn.lock') }}
+
+      - run: yarn install --immutable
+
+      - name: Lint changed files
+        run: |
+          CHANGED_FILES=$(git diff --name-only --diff-filter=ACMRT ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep -E '\.(ts|tsx|js|jsx)$' || true)
+          if [ -n "$CHANGED_FILES" ]; then
+            echo "$CHANGED_FILES" | xargs yarn eslint --max-warnings=0
+          fi
+
+  # Test only affected projects
+  test-affected:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: pika_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - run: corepack enable
+
+      - name: Setup caches
+        uses: ./.github/actions/cache-setup
+
+      - run: yarn install --immutable
+
+      - name: Load environment
+        run: cat .github/env/.env.ci >> $GITHUB_ENV
+
+      - name: Generate required files
+        run: |
+          yarn db:generate
+          yarn nx run @pika/types:build --skip-nx-cache
+          yarn nx run @pika/environment:build --skip-nx-cache
+          yarn generate:api
+
+      - name: Test affected
+        run: |
+          yarn nx affected \
+            --target=test \
+            --base=origin/${{ github.event.pull_request.base.ref }} \
+            --head=HEAD \
+            --parallel=3 \
+            --configuration=ci
+
+  # PR Status Check
+  pr-complete:
+    needs: [lint-changed, test-affected]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: PR Summary
+        run: |
+          echo "### PR Check Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint | ${{ needs.lint-changed.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests | ${{ needs.test-affected.result }} |" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.lint-changed.result }}" != "success" ] || [ "${{ needs.test-affected.result }}" != "success" ]; then
+            exit 1
+          fi

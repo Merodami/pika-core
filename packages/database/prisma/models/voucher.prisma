@@ -1,0 +1,282 @@
+/// Core voucher model for the voucher management system
+model Voucher {
+  id                     String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId             String              @map("business_id") @db.Uuid // Renamed from providerId to match new architecture
+  categoryId             String?             @map("category_id") @db.Uuid // Optional category association
+  state                  VoucherState        @default(draft) // Changed from NEW to DRAFT to match new architecture
+  
+  // Multilingual content using translation keys (new translation system)
+  titleKey               String              @map("title_key") @db.VarChar(255) // Translation key for title
+  descriptionKey         String              @map("description_key") @db.VarChar(255) // Translation key for description
+  termsAndConditionsKey  String              @map("terms_and_conditions_key") @db.VarChar(255) // Translation key for terms
+  
+  // Voucher value and discount settings
+  type                   VoucherType         // PERCENTAGE, FIXED_VALUE, FREE_ITEM, etc.
+  value                  Decimal?            @db.Decimal(10, 2) // Fixed value amount
+  discount               Decimal?            @db.Decimal(5, 2) // Percentage discount (0-100)
+  currency               String              @default("PYG") @db.VarChar(3)
+  
+  // Geospatial support for location-based vouchers
+  location               Unsupported("geography(Point, 4326)")? // PostGIS geospatial
+  
+  // Media and branding
+  imageUrl               String?             @map("image_url") @db.VarChar(500)
+  
+  // Validity and expiration
+  validFrom              DateTime?           @map("valid_from") @db.Timestamptz(6)
+  validUntil             DateTime?           @map("valid_until") @db.Timestamptz(6) // Renamed from expiresAt
+  
+  // Redemption limits
+  maxRedemptions         Int?                @map("max_redemptions")
+  maxRedemptionsPerUser  Int                 @default(1) @map("max_redemptions_per_user")
+  redemptionsCount       Int                 @default(0) @map("redemptions_count") // Renamed from currentRedemptions
+  
+  // Analytics counters (denormalized for performance)
+  scanCount              Int                 @default(0) @map("scan_count")
+  claimCount             Int                 @default(0) @map("claim_count")
+  
+  // Additional metadata and settings
+  metadata               Json?               // Additional voucher metadata
+  qrCode                 String?             @unique @map("qr_code") @db.VarChar(500) // Primary QR code for scanning
+  
+  // Audit timestamps
+  createdAt              DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime            @default(now()) @map("updated_at") @db.Timestamptz(6) @updatedAt
+  deletedAt              DateTime?           @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  business               Business            @relation(fields: [businessId], references: [id])
+  category               Category?           @relation(fields: [categoryId], references: [id])
+  codes                  VoucherCode[]
+  redemptions            VoucherRedemption[]
+  scans                  VoucherScan[]
+  customerVouchers       CustomerVoucher[]
+  fraudCases             FraudCase[]
+  
+  @@index([businessId])
+  @@index([categoryId])
+  @@index([state])
+  @@index([type])
+  @@index([validFrom])
+  @@index([validUntil])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@index([deletedAt])
+  @@index([qrCode])
+  @@index([state, businessId]) // For business voucher filtering
+  @@index([state, validUntil]) // For expiry checking
+  @@index([businessId, createdAt]) // For business voucher listing
+  @@index([categoryId, state]) // For category filtering
+  @@map("vouchers")
+  @@schema("business")
+}
+
+/// Voucher codes for different redemption methods (QR, short codes, static codes)
+model VoucherCode {
+  id         String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  voucherId  String          @map("voucher_id") @db.Uuid
+  code       String          @unique @db.VarChar(500) // Large enough for JWT tokens
+  type       VoucherCodeType // QR, SHORT, STATIC
+  isActive   Boolean         @default(true) @map("is_active")
+  metadata   Json?           // Additional code metadata (algorithm, generation params, etc.)
+  createdAt  DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime        @default(now()) @map("updated_at") @db.Timestamptz(6) @updatedAt
+
+  // Relations
+  voucher    Voucher         @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  
+  @@index([voucherId])
+  @@index([type])
+  @@index([isActive])
+  @@index([code]) // Already unique, but good for lookups
+  @@index([voucherId, type]) // For finding codes by voucher and type
+  @@index([voucherId, isActive]) // For finding active codes
+  @@map("voucher_codes")
+  @@schema("business")
+}
+
+/// Voucher redemption tracking for analytics and fraud prevention
+model VoucherRedemption {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  voucherId  String    @map("voucher_id") @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  codeUsed   String    @map("code_used") @db.VarChar(500) // The specific code that was used
+  redeemedAt DateTime  @map("redeemed_at") @db.Timestamptz(6)
+  
+  // Location and context data for analytics
+  location   Unsupported("geography(Point, 4326)")? // Where the redemption happened
+  
+  // Audit and tracking
+  metadata   Json?     // Additional redemption metadata (device, IP, etc.)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  voucher    Voucher   @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id])
+  fraudCase  FraudCase?
+
+  @@unique([voucherId, userId]) // One redemption per user per voucher
+  @@index([voucherId])
+  @@index([userId])
+  @@index([redeemedAt])
+  @@index([codeUsed])
+  @@index([voucherId, redeemedAt]) // For voucher redemption analytics
+  @@index([userId, redeemedAt]) // For user redemption history
+  @@map("voucher_redemptions")
+  @@schema("business")
+}
+
+/// Customer voucher wallet - claimed vouchers before redemption
+model CustomerVoucher {
+  id                      String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customerId              String                @map("customer_id") @db.Uuid
+  voucherId               String                @map("voucher_id") @db.Uuid
+  claimedAt               DateTime              @map("claimed_at") @db.Timestamptz(6)
+  status                  CustomerVoucherStatus @default(claimed) @map("status")
+  
+  // Notification and reminder settings
+  notificationPreferences Json?                 @map("notification_preferences") // Reminder settings, push notifications
+  
+  // Redemption tracking
+  redeemedAt              DateTime?             @map("redeemed_at") @db.Timestamptz(6)
+  
+  // Audit timestamps
+  createdAt               DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt               DateTime              @default(now()) @map("updated_at") @db.Timestamptz(6) @updatedAt
+
+  // Relations
+  customer                User      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  voucher                 Voucher   @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, voucherId]) // One claim per customer per voucher
+  @@index([customerId])
+  @@index([voucherId])
+  @@index([status])
+  @@index([claimedAt])
+  @@index([redeemedAt])
+  @@index([customerId, status]) // For customer wallet filtering
+  @@index([voucherId, status]) // For voucher claim analytics
+  @@index([customerId, claimedAt]) // For customer voucher history
+  @@map("customer_vouchers")
+  @@schema("business")
+}
+
+/// Voucher scan tracking for comprehensive analytics
+model VoucherScan {
+  id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  voucherId   String            @map("voucher_id") @db.Uuid
+  userId      String?           @map("user_id") @db.Uuid // Optional - anonymous scans allowed
+  scanType    VoucherScanType   @map("scan_type") // CUSTOMER, BUSINESS
+  scanSource  VoucherScanSource @map("scan_source") // CAMERA, GALLERY, LINK, SHARE
+  
+  // Location analytics
+  location    Unsupported("geography(Point, 4326)")? // PostGIS geospatial analytics
+  
+  // Device and technical information
+  deviceInfo  Json              @default("{}") @map("device_info") // Platform, version, model, etc.
+  
+  // Business context (if scan happened at business location)
+  businessId  String?           @map("business_id") @db.Uuid // Business where scan happened (may differ from voucher business)
+  
+  // Timing and audit
+  scannedAt   DateTime          @map("scanned_at") @db.Timestamptz(6)
+  createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  
+  // Additional context metadata
+  metadata    Json?             // IP address, user agent, referrer, etc.
+
+  // Relations
+  voucher     Voucher   @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  business    Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
+  
+  @@index([voucherId])
+  @@index([userId])
+  @@index([businessId])
+  @@index([scanType])
+  @@index([scanSource])
+  @@index([scannedAt])
+  @@index([voucherId, scannedAt]) // For voucher scan analytics
+  @@index([userId, scannedAt]) // For user scan history
+  @@index([businessId, scannedAt]) // For business scan analytics
+  @@index([voucherId, scanType]) // For scan type analytics
+  @@index([scanSource, scannedAt]) // For scan source analytics
+  @@map("voucher_scans")
+  @@schema("analytics")
+}
+
+/// Fraud detection and case management for voucher redemptions
+model FraudCase {
+  id                String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  caseNumber        String               @unique @map("case_number") @db.VarChar(20) // FRAUD-2024-0001
+  redemptionId      String               @unique @map("redemption_id") @db.Uuid
+  detectedAt        DateTime             @map("detected_at") @db.Timestamptz(6)
+  riskScore         Int                  @map("risk_score") @db.Integer // 0-100
+  flags             Json                 // Array of detected fraud flags
+  detectionMetadata Json?                @map("detection_metadata") // ML model outputs, rule triggers
+  
+  // Context entities
+  customerId        String               @map("customer_id") @db.Uuid
+  businessId        String               @map("business_id") @db.Uuid // Changed from providerId
+  voucherId         String               @map("voucher_id") @db.Uuid
+  
+  // Case management
+  status            FraudCaseStatus      @default(pending)
+  reviewedAt        DateTime?            @map("reviewed_at") @db.Timestamptz(6)
+  reviewedBy        String?              @map("reviewed_by") @db.Uuid
+  reviewNotes       String?              @map("review_notes") @db.Text
+  actionsTaken      Json?                @map("actions_taken") // Array of actions (block user, refund, etc.)
+  
+  // Audit timestamps
+  createdAt         DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime             @default(now()) @map("updated_at") @db.Timestamptz(6) @updatedAt
+
+  // Relations
+  redemption        VoucherRedemption    @relation(fields: [redemptionId], references: [id])
+  customer          User                 @relation("FraudCaseCustomer", fields: [customerId], references: [id])
+  business          Business             @relation(fields: [businessId], references: [id]) // Changed from Provider
+  voucher           Voucher              @relation(fields: [voucherId], references: [id])
+  reviewer          User?                @relation("FraudCaseReviewer", fields: [reviewedBy], references: [id])
+  history           FraudCaseHistory[]
+  
+  @@index([status])
+  @@index([detectedAt])
+  @@index([riskScore])
+  @@index([customerId])
+  @@index([businessId])
+  @@index([voucherId])
+  @@index([reviewedBy])
+  @@index([caseNumber])
+  @@index([status, detectedAt]) // For case queue management
+  @@index([customerId, status]) // For customer fraud history
+  @@index([businessId, status]) // For business fraud analytics
+  @@index([riskScore, status]) // For high-risk case prioritization
+  @@map("fraud_cases")
+  @@schema("security")
+}
+
+/// Fraud case history for audit trail and case progression tracking
+model FraudCaseHistory {
+  id          String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  caseId      String          @map("case_id") @db.Uuid
+  action      String          @db.VarChar(100) // 'created', 'status_changed', 'reviewed', 'action_taken'
+  oldValue    String?         @map("old_value") @db.Text // Previous value (for status changes)
+  newValue    String?         @map("new_value") @db.Text // New value
+  notes       String?         @db.Text // Action notes or comments
+  performedBy String          @map("performed_by") @db.Uuid // User who performed the action
+  performedAt DateTime        @map("performed_at") @db.Timestamptz(6)
+  metadata    Json?           // Additional action metadata
+  createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  case        FraudCase       @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  performer   User            @relation(fields: [performedBy], references: [id])
+  
+  @@index([caseId])
+  @@index([performedBy])
+  @@index([performedAt])
+  @@index([action])
+  @@index([caseId, performedAt]) // For case history chronology
+  @@map("fraud_case_history")
+  @@schema("security")
+}

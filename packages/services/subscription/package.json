@@ -1,0 +1,48 @@
+{
+  "name": "@pika/subscription",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Membership and subscription management for Pika platform",
+  "author": "Damian Meroni",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@pika/api": "workspace:^",
+    "@pika/auth": "workspace:^",
+    "@pika/database": "workspace:^",
+    "@pika/environment": "workspace:^",
+    "@pika/http": "workspace:^",
+    "@pika/redis": "workspace:^",
+    "@pika/sdk": "workspace:^",
+    "@pika/shared": "workspace:^",
+    "@pika/types": "workspace:^",
+    "express": "^5.1.0",
+    "jose": "^6.0.12",
+    "pino": "^9.7.0",
+    "zod": "^4.0.10"
+  },
+  "devDependencies": {
+    "@pika/tests": "workspace:^"
+  },
+  "depcheck": {
+    "ignoreDirs": [
+      "test",
+      "dist"
+    ],
+    "ignorePatterns": [
+      "*.test.ts",
+      "*.spec.ts",
+      "*.it.ts"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pika/pika.git",
+    "directory": "packages/services/subscription"
+  },
+  "homepage": "https://github.com/pikaipikae/main/packages/services/subscription",
+  "bugs": {
+    "url": "https://github.com/pikaipikaues"
+  }
+}

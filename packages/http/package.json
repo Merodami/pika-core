@@ -1,0 +1,44 @@
+{
+  "name": "@pika/http",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Express.js framework utilities and middleware for Pika platform",
+  "author": "Damian Meroni",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@pika/auth": "workspace:^",
+    "@pika/environment": "workspace:^",
+    "@pika/redis": "workspace:^",
+    "@pika/shared": "workspace:^",
+    "@pika/translation": "workspace:^",
+    "@pika/types": "workspace:^",
+    "@types/compression": "^1.8.1",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/multer": "^2.0.0",
+    "accepts": "^1.3.8",
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "express-async-errors": "^3.1.1",
+    "express-rate-limit": "^8.0.1",
+    "helmet": "^8.1.0",
+    "http-graceful-shutdown": "^3.1.14",
+    "lodash-es": "^4.17.21",
+    "multer": "^2.0.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pika/pika.git",
+    "directory": "packages/http"
+  },
+  "homepage": "https://github.com/pikaipikae/main/packages/http",
+  "bugs": {
+    "url": "https://github.com/pikaipikaues"
+  }
+}

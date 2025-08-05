@@ -1,0 +1,27 @@
+{
+  "name": "@pika/sdk",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Shared domain models, DTOs, and mappers for Pika platform",
+  "author": "Damian Meroni",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@pika/environment": "workspace:^",
+    "@pika/types": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/lodash-es": "^4.17.12",
+    "typescript": "^5.8.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pika/pika.git",
+    "directory": "packages/sdk"
+  },
+  "homepage": "https://github.com/pikaipikae/main/packages/sdk",
+  "bugs": {
+    "url": "https://github.com/pikaipikaues"
+  }
+}

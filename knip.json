@@ -1,0 +1,25 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    "packages/*": {
+      "entry": ["src/**/*.ts"],
+      "project": "**/*.ts"
+    }
+  },
+  "ignoreDependencies": [
+    "typescript",
+    "@types/*",
+    "tsc-alias",
+    "@pika/*",
+    "express",
+    "uuid",
+    "@nx/*",
+    "omnigraph/openapi",
+    "pino-pretty"
+  ],
+  "ignoreWorkspaces": ["previous-architecture", "pika"],
+  "ignoreExportsUsedInFile": true,
+  "typescript": {
+    "config": "tsconfig.json"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "@pika/environment",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Centralized environment variable management and configuration for Pika platform",
+  "author": "Damian Meroni",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "find-up": "^7.0.0",
+    "lodash-es": "^4.17.21"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pika/pika.git",
+    "directory": "packages/environment"
+  },
+  "homepage": "https://github.com/pikaipikae/main/packages/environment",
+  "bugs": {
+    "url": "https://github.com/pikaipikaues"
+  }
+}

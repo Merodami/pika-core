@@ -1,0 +1,24 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "tsBuildInfoFile": "./dist/.tsbuildinfo"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"],
+  "references": [
+    { "path": "../shared" },
+    { "path": "../types" },
+    { "path": "../environment" },
+    { "path": "../http" },
+    { "path": "../api-gateway" },
+    { "path": "../services/auth" },
+    { "path": "../services/user" },
+    { "path": "../services/payment" },
+    { "path": "../services/subscription" },
+    { "path": "../services/communication" },
+    { "path": "../services/support" },
+    { "path": "../services/storage" }
+  ]
+}

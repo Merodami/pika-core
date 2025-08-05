@@ -1,0 +1,33 @@
+{
+  "name": "@pika/auth",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Authentication utilities and JWT management for Pika platform",
+  "author": "Damian Meroni",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@pika/database": "workspace:^",
+    "@pika/environment": "workspace:^",
+    "@pika/shared": "workspace:^",
+    "@pika/types": "workspace:^",
+    "@prisma/client": "^6.12.0",
+    "@types/bcrypt": "^6.0.0",
+    "bcrypt": "^6.0.0",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
+    "typescript": "^5.8.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pika/pika.git",
+    "directory": "packages/auth"
+  },
+  "homepage": "https://github.com/pikaipikae/main/packages/auth",
+  "bugs": {
+    "url": "https://github.com/pikaipikaues"
+  }
+}

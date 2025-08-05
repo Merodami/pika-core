@@ -1,0 +1,5 @@
+{
+  "*.{js,tsx,jsx,ts}": ["eslint --fix"],
+  "*.{json,md,yml,yaml}": ["prettier --write"],
+  "!(*.png|Dockerfile*)": ["prettier --write --ignore-unknown"]
+}

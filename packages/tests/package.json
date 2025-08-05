@@ -1,0 +1,34 @@
+{
+  "name": "@pika/tests",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Shared testing utilities and fixtures for Pika platform",
+  "author": "Damian Meroni",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@pika/database": "workspace:^",
+    "@pika/shared": "workspace:^",
+    "@pika/types": "workspace:^",
+    "@types/supertest": "^6.0.3",
+    "lodash-es": "^4.17.21",
+    "node-fetch": "^3.3.2",
+    "stripe": "^18.3.0",
+    "supertest": "^7.1.4",
+    "testcontainers": "^11.4.0",
+    "vitest": "^3.2.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pika/pika.git",
+    "directory": "packages/tests"
+  },
+  "homepage": "https://github.com/pikaipikae/main/packages/tests",
+  "bugs": {
+    "url": "https://github.com/pikaipikaues"
+  }
+}

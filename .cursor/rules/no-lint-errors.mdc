@@ -1,0 +1,9 @@
+---
+description: 
+globs: *
+alwaysApply: false
+---
+
+# Your rule content
+
+Always validate that there is no lint errors when you create or adapt code. If there is still lint errors, iterate until it works with the best strategy, industry standard, best practices and clean code

@@ -1,0 +1,36 @@
+{
+  "name": "@pika/database",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Prisma schema management, migrations, and database utilities for Pika platform",
+  "author": "Damian Meroni",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@pika/environment": "workspace:^",
+    "@pika/shared": "workspace:^",
+    "@pika/types": "workspace:^",
+    "@prisma/client": "^6.12.0",
+    "he": "^1.2.0",
+    "lodash-es": "^4.17.21",
+    "pg": "^8.16.3",
+    "prisma": "^6.12.0"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^9.9.0",
+    "@types/he": "^1.2.3",
+    "@types/pg": "^8.15.4",
+    "typescript": "^5.8.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pika/pika.git",
+    "directory": "packages/database"
+  },
+  "homepage": "https://github.com/pikaipikae/main/packages/database",
+  "bugs": {
+    "url": "https://github.com/pikaipikaues"
+  }
+}

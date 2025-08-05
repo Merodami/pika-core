@@ -1,0 +1,146 @@
+/// Enhanced user authentication schema for Firebase integration
+model UserIdentity {
+  id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String      @unique @map("user_id") @db.Uuid
+  provider          String      @db.VarChar(50) // "firebase", "google", "facebook", "apple"
+  providerId        String      @map("provider_id") @db.VarChar(255) // ID in the provider's system
+  firebaseUid       String?     @unique @map("firebase_uid") @db.VarChar(128) // Firebase UID
+  providerData      Json        @default("{}") @map("provider_data") // Provider-specific data
+  lastSignInMethod  String?     @map("last_sign_in_method") @db.VarChar(50)
+  isEmailVerified   Boolean     @default(false) @map("is_email_verified")
+  isPhoneVerified   Boolean     @default(false) @map("is_phone_verified")
+  lastLogin         DateTime    @default(now()) @map("last_login") @db.Timestamptz(6)
+  createdAt         DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime    @default(now()) @map("updated_at") @db.Timestamptz(6) @updatedAt
+  
+  // Relations
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([provider, providerId])
+  @@index([userId])
+  @@index([provider, providerId])
+  @@index([firebaseUid])
+  @@map("user_identities")
+  @@schema("identity")
+}
+
+/// Multiple authentication methods per user
+model UserAuthMethod {
+  id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String      @map("user_id") @db.Uuid
+  authMethod        String      @map("auth_method") @db.VarChar(50) // 'password', 'google', 'facebook', 'apple', 'phone', 'totp'
+  providerData      Json        @default("{}") @map("provider_data")
+  isVerified        Boolean     @default(false) @map("is_verified")
+  isEnabled         Boolean     @default(true) @map("is_enabled")
+  lastUsedAt        DateTime?   @map("last_used_at") @db.Timestamptz(6)
+  createdAt         DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime    @default(now()) @map("updated_at") @db.Timestamptz(6) @updatedAt
+  
+  // Relations
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, authMethod])
+  @@index([userId])
+  @@index([authMethod])
+  @@index([userId, isEnabled, lastUsedAt])
+  @@map("user_auth_methods")
+  @@schema("identity")
+}
+
+/// Device management for trusted devices and security
+model UserDevice {
+  id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String      @map("user_id") @db.Uuid
+  deviceId          String      @map("device_id") @db.VarChar(255) // Firebase Installation ID or fingerprint
+  deviceName        String?     @map("device_name") @db.VarChar(255)
+  deviceType        DeviceType  @map("device_type")
+  browserInfo       Json        @default("{}") @map("browser_info")
+  lastIpAddress     String?     @map("last_ip_address") @db.Inet
+  lastLocation      Json?       @map("last_location") // {lat, lng, city, country}
+  isTrusted         Boolean     @default(false) @map("is_trusted")
+  trustExpiresAt    DateTime?   @map("trust_expires_at") @db.Timestamptz(6)
+  fcmToken          String?     @map("fcm_token") @db.VarChar(500)
+  lastActiveAt      DateTime    @default(now()) @map("last_active_at") @db.Timestamptz(6)
+  createdAt         DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime    @default(now()) @map("updated_at") @db.Timestamptz(6) @updatedAt
+  
+  // Relations
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  securityEvents    SecurityEvent[]
+  
+  @@unique([userId, deviceId])
+  @@index([userId])
+  @@index([userId, lastActiveAt])
+  @@index([userId, isTrusted, trustExpiresAt])
+  @@index([fcmToken])
+  @@map("user_devices")
+  @@schema("identity")
+}
+
+/// 2FA/MFA settings for users
+model UserMfaSettings {
+  id                      String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                  String      @unique @map("user_id") @db.Uuid
+  isEnabled               Boolean     @default(false) @map("is_enabled")
+  preferredMethod         MfaMethod?  @map("preferred_method")
+  backupCodesHash         String[]    @map("backup_codes_hash") // Hashed backup codes
+  backupCodesGeneratedAt  DateTime?   @map("backup_codes_generated_at") @db.Timestamptz(6)
+  backupCodesUsed         Int         @default(0) @map("backup_codes_used")
+  totpSecretEncrypted     String?     @map("totp_secret_encrypted") // Encrypted TOTP secret
+  recoveryEmail           String?     @map("recovery_email") @db.VarChar(255)
+  phoneNumberVerified     String?     @map("phone_number_verified") @db.VarChar(50)
+  createdAt               DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt               DateTime    @default(now()) @map("updated_at") @db.Timestamptz(6) @updatedAt
+  
+  // Relations
+  user                    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([userId, isEnabled])
+  @@map("user_mfa_settings")
+  @@schema("identity")
+}
+
+/// Security events and audit logging
+model SecurityEvent {
+  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String?     @map("user_id") @db.Uuid
+  deviceId        String?     @map("device_id") @db.Uuid
+  eventType       String      @map("event_type") @db.VarChar(100) // 'login', 'logout', 'mfa_enabled', 'device_trusted', etc.
+  eventData       Json        @default("{}") @map("event_data")
+  ipAddress       String?     @map("ip_address") @db.Inet
+  userAgent       String?     @map("user_agent")
+  location        Json?       @map("location") // {lat, lng, city, country}
+  riskScore       Int         @default(0) @map("risk_score") // 0-100 risk assessment
+  createdAt       DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  
+  // Relations
+  user            User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  device          UserDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@index([riskScore, createdAt])
+  @@map("security_events")
+  @@schema("identity")
+}
+
+/// Enums for auth schema
+enum DeviceType {
+  ios
+  android
+  web
+  desktop
+  
+  @@schema("identity")
+}
+
+enum MfaMethod {
+  sms
+  totp
+  email
+  backup_codes
+  
+  @@schema("identity")
+}

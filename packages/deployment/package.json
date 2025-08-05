@@ -1,0 +1,46 @@
+{
+  "name": "@pika/deployment",
+  "version": "1.0.0",
+  "author": "Damian Meroni",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./adapters": "./dist/adapters/index.js",
+    "./vercel": "./dist/adapters/vercel/index.js",
+    "./aws": "./dist/adapters/aws/index.js"
+  },
+  "scripts": {
+    "build": "rimraf dist && tsc && tsc-alias",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@pika/api-gateway": "workspace:^",
+    "@pika/auth": "workspace:^",
+    "@pika/auth-service": "workspace:^",
+    "@pika/communication": "workspace:^",
+    "@pika/environment": "workspace:^",
+    "@pika/http": "workspace:^",
+    "@pika/payment": "workspace:^",
+    "@pika/redis": "workspace:^",
+    "@pika/shared": "workspace:^",
+    "@pika/storage": "workspace:^",
+    "@pika/subscription": "workspace:^",
+    "@pika/support": "workspace:^",
+    "@pika/types": "workspace:^",
+    "@pika/user": "workspace:^",
+    "express": "^5.1.0",
+    "http-proxy-middleware": "^3.0.5",
+    "pino": "^9.7.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.1.0",
+    "@vitest/ui": "^3.2.4",
+    "rimraf": "^6.0.1",
+    "tsc-alias": "^1.8.16",
+    "typescript": "^5.8.3",
+    "vitest-mock-extended": "^3.1.0"
+  }
+}

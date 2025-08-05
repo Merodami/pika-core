@@ -1,0 +1,27 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    // Tests
+    {
+      "label": "Test (Unit)",
+      "command": "yarn",
+      "args": ["test:unit", "--watch"],
+      "dependsOn": ["Build (Dependencies)"],
+      "group": { "kind": "test" }
+    },
+    {
+      "label": "Test (Integration)",
+      "command": "yarn",
+      "args": ["test:integration", "--watch"],
+      "dependsOn": ["Build (Dependencies)", "Set up integration tests"],
+      "group": { "kind": "test" }
+    },
+    {
+      "label": "Set up integration tests",
+      "command": "yarn",
+      "args": ["test:integration-setup"],
+      "dependsOn": ["Build (Dependencies)"],
+      "group": { "kind": "test" }
+    }
+  ]
+}

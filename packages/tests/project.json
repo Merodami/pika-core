@@ -1,0 +1,36 @@
+{
+  "name": "@pika/tests",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "@pika/types",
+    "@pika/environment",
+    "@pika/api",
+    "@pika/shared",
+    "@pika/database",
+    "@pika/redis"
+  ],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p tsconfig.json --noEmit",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -rf dist && tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
+        "cwd": "{projectRoot}"
+      },
+      "outputs": ["{projectRoot}/dist"]
+    },
+    "local": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p tsconfig.json --watch --preserveWatchOutput",
+        "cwd": "{projectRoot}"
+      }
+    }
+  }
+}

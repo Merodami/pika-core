@@ -1,0 +1,3209 @@
+#!/usr/bin/env tsx
+
+// Load environment variables before importing anything else
+import { config } from 'dotenv'
+import { dirname as pathDirname, join as pathJoin } from 'path'
+import { fileURLToPath as fileUrlToPath } from 'url'
+
+const __currentFilename = fileUrlToPath(import.meta.url)
+const __currentDirname = pathDirname(__currentFilename)
+
+// Load environment variables from project root
+config({ path: pathJoin(__currentDirname, '../../../../.env') })
+config({ path: pathJoin(__currentDirname, '../../../../.env.local') })
+
+import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi'
+import { API_GATEWAY_BASE_URL } from '@pika/environment'
+import { mkdirSync, writeFileSync } from 'fs'
+import { dirname, join } from 'path'
+import { fileURLToPath } from 'url'
+import { z } from 'zod'
+
+// Admin schemas - Import ALL admin functionality
+import * as dashboardSchemas from '../admin/schemas/dashboard.js'
+import * as adminGymSchemas from '../admin/schemas/gym/management.js'
+import * as adminPaymentSchemas from '../admin/schemas/payment/transactions.js'
+import * as adminSessionSchemas from '../admin/schemas/session/management.js'
+import * as adminSessionAnalyticsSchemas from '../admin/schemas/session/analytics.js'
+import * as adminSupportSchemas from '../admin/schemas/support/tickets.js'
+import * as adminUserSchemas from '../admin/schemas/user/management.js'
+import { createSimpleRegistry } from '../common/registry/simple.js'
+import { UserId } from '../common/schemas/branded.js'
+import { DateTime, UUID } from '../common/schemas/primitives.js'
+import { ErrorResponse, MessageResponse } from '../common/schemas/responses.js'
+import * as internalDiscoverySchemas from '../internal/schemas/discovery/service.js'
+// Internal schemas - Import ALL internal functionality
+import * as healthSchemas from '../internal/schemas/health.js'
+import * as internalAuthSchemas from '../internal/schemas/auth/service.js'
+import * as internalCommunicationSchemas from '../internal/schemas/communication/service.js'
+import * as internalSessionSchemas from '../internal/schemas/session/service.js'
+import * as internalUserSchemas from '../internal/schemas/user/service.js'
+import * as internalPaymentSchemas from '../internal/schemas/payment/service.js'
+import * as internalSubscriptionSchemas from '../internal/schemas/subscription/service.js'
+// Import ALL public schemas - Complete implementation
+import * as authLoginSchemas from '../public/schemas/auth/login.js'
+import * as authPasswordSchemas from '../public/schemas/auth/password.js'
+import * as authRegisterSchemas from '../public/schemas/auth/register.js'
+import * as communicationNotificationSchemas from '../public/schemas/communication/notification.js'
+import * as gymSchemas from '../public/schemas/gym/gym.js'
+import * as inductionSchemas from '../public/schemas/induction/induction.js'
+import * as paymentCreditSchemas from '../public/schemas/payment/credit.js'
+import * as webhookSchemas from '../public/schemas/payment/webhooks.js'
+import * as sessionBookingSchemas from '../public/schemas/session/booking.js'
+import * as inviteeSchemas from '../public/schemas/session/invitee.js'
+import * as sessionSchemas from '../public/schemas/session/session.js'
+import * as waitingListSchemas from '../public/schemas/session/waitingList.js'
+import * as socialActivitySchemas from '../public/schemas/social/activity.js'
+import * as socialFriendSchemas from '../public/schemas/social/friend.js'
+import * as stuffSchemas from '../public/schemas/stuff/stuff.js'
+import * as subscriptionSchemas from '../public/schemas/subscription/subscription.js'
+import * as subscriptionPlanSchemas from '../public/schemas/subscription/subscriptionPlan.js'
+import * as supportProblemSchemas from '../public/schemas/support/problem.js'
+import * as userAddressSchemas from '../public/schemas/user/address.js'
+import * as userParqSchemas from '../public/schemas/user/parq.js'
+import * as userPaymentMethodSchemas from '../public/schemas/user/paymentMethod.js'
+import * as userProfessionalSchemas from '../public/schemas/user/professional.js'
+import * as userProfileSchemas from '../public/schemas/user/profile.js'
+
+/**
+ * Generate OpenAPI specifications for all three APIs
+ */
+
+// Extend Zod with OpenAPI
+extendZodWithOpenApi(z)
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
+// Output directory
+const OUTPUT_DIR = join(__dirname, '../../generated/openapi')
+
+// ============= Public API =============
+
+const publicRegistry = createSimpleRegistry({
+  title: 'Pika Public API',
+  version: '1.0.0',
+  description: 'Public API for Pika mobile and web applications',
+  servers: [
+    {
+      url: `${API_GATEWAY_BASE_URL || 'http://localhost:5500'}/api/v1`,
+      description: 'Local Development',
+    },
+    { url: 'https://api.pika.com/v1', description: 'Production' },
+    { url: 'https://api.staging.pika.com/v1', description: 'Staging' },
+  ],
+})
+
+// Register ALL public schemas
+// Authentication schemas
+publicRegistry.registerSchema('LoginRequest', authLoginSchemas.LoginRequest)
+publicRegistry.registerSchema('LoginResponse', authLoginSchemas.LoginResponse)
+publicRegistry.registerSchema(
+  'RegisterRequest',
+  authRegisterSchemas.RegisterRequest,
+)
+publicRegistry.registerSchema(
+  'RegisterResponse',
+  authRegisterSchemas.RegisterResponse,
+)
+publicRegistry.registerSchema(
+  'ForgotPasswordRequest',
+  authPasswordSchemas.ForgotPasswordRequest,
+)
+publicRegistry.registerSchema(
+  'ResetPasswordRequest',
+  authPasswordSchemas.ResetPasswordRequest,
+)
+publicRegistry.registerSchema(
+  'ChangePasswordRequest',
+  authPasswordSchemas.ChangePasswordRequest,
+)
+
+// User schemas
+publicRegistry.registerSchema(
+  'CurrentUserProfile',
+  userProfileSchemas.CurrentUserProfile,
+)
+publicRegistry.registerSchema(
+  'UpdateProfileRequest',
+  userProfileSchemas.UpdateProfileRequest,
+)
+publicRegistry.registerSchema(
+  'ProfessionalProfile',
+  userProfessionalSchemas.ProfessionalProfile,
+)
+publicRegistry.registerSchema(
+  'CreateProfessionalProfileRequest',
+  userProfessionalSchemas.CreateProfessionalProfileRequest,
+)
+publicRegistry.registerSchema('PARQSubmission', userParqSchemas.PARQSubmission)
+publicRegistry.registerSchema(
+  'SubmitPARQRequest',
+  userParqSchemas.SubmitPARQRequest,
+)
+publicRegistry.registerSchema('UserAddress', userAddressSchemas.UserAddress)
+publicRegistry.registerSchema(
+  'CreateAddressRequest',
+  userAddressSchemas.CreateAddressRequest,
+)
+publicRegistry.registerSchema(
+  'PaymentMethod',
+  userPaymentMethodSchemas.PaymentMethod,
+)
+publicRegistry.registerSchema(
+  'AddPaymentMethodRequest',
+  userPaymentMethodSchemas.AddPaymentMethodRequest,
+)
+
+// Session schemas
+publicRegistry.registerSchema(
+  'CreateBookingRequest',
+  sessionBookingSchemas.CreateBookingRequest,
+)
+publicRegistry.registerSchema(
+  'BookingConfirmationResponse',
+  sessionBookingSchemas.BookingConfirmationResponse,
+)
+publicRegistry.registerSchema('Session', sessionSchemas.Session)
+publicRegistry.registerSchema(
+  'CreateSessionRequest',
+  sessionSchemas.CreateSessionRequest,
+)
+publicRegistry.registerSchema(
+  'UpdateSessionRequest',
+  sessionSchemas.UpdateSessionRequest,
+)
+publicRegistry.registerSchema(
+  'SessionSearchParams',
+  sessionSchemas.SessionSearchParams,
+)
+// Waiting list schemas
+publicRegistry.registerSchema(
+  'JoinWaitingListRequest',
+  waitingListSchemas.JoinWaitingListRequest,
+)
+publicRegistry.registerSchema(
+  'JoinWaitingListResponse',
+  waitingListSchemas.JoinWaitingListResponse,
+)
+publicRegistry.registerSchema(
+  'UpdateWaitingListRequest',
+  waitingListSchemas.UpdateWaitingListRequest,
+)
+publicRegistry.registerSchema(
+  'LeaveWaitingListRequest',
+  waitingListSchemas.LeaveWaitingListRequest,
+)
+publicRegistry.registerSchema(
+  'LeaveWaitingListResponse',
+  waitingListSchemas.LeaveWaitingListResponse,
+)
+// Extra time schemas
+publicRegistry.registerSchema(
+  'RequestExtraTimeRequest',
+  sessionBookingSchemas.RequestExtraTimeRequest,
+)
+publicRegistry.registerSchema(
+  'RequestExtraTimeResponse',
+  sessionBookingSchemas.RequestExtraTimeResponse,
+)
+// Invitee schemas
+publicRegistry.registerSchema(
+  'InviteGuestRequest',
+  inviteeSchemas.InviteGuestRequest,
+)
+publicRegistry.registerSchema(
+  'InviteGuestResponse',
+  inviteeSchemas.InviteGuestResponse,
+)
+publicRegistry.registerSchema(
+  'UpdateInvitationRequest',
+  inviteeSchemas.UpdateInvitationRequest,
+)
+publicRegistry.registerSchema(
+  'UpdateInvitationResponse',
+  inviteeSchemas.UpdateInvitationResponse,
+)
+publicRegistry.registerSchema(
+  'SessionInviteesParams',
+  inviteeSchemas.SessionInviteesParams,
+)
+publicRegistry.registerSchema(
+  'SessionInviteesResponse',
+  inviteeSchemas.SessionInviteesResponse,
+)
+
+// Gym schemas
+publicRegistry.registerSchema('SearchGymsRequest', gymSchemas.SearchGymsRequest)
+publicRegistry.registerSchema(
+  'SearchGymsResponse',
+  gymSchemas.SearchGymsResponse,
+)
+publicRegistry.registerSchema(
+  'GymDetailsResponse',
+  gymSchemas.GymDetailsResponse,
+)
+
+// Payment schemas
+publicRegistry.registerSchema(
+  'UserCreditsResponse',
+  paymentCreditSchemas.UserCreditsResponse,
+)
+publicRegistry.registerSchema('CreditPack', paymentCreditSchemas.CreditPack)
+publicRegistry.registerSchema(
+  'PurchaseCreditPackRequest',
+  paymentCreditSchemas.PurchaseCreditPackRequest,
+)
+publicRegistry.registerSchema(
+  'PurchaseCreditPackResponse',
+  paymentCreditSchemas.PurchaseCreditPackResponse,
+)
+
+// Subscription schemas
+publicRegistry.registerSchema('Subscription', subscriptionSchemas.Subscription)
+publicRegistry.registerSchema(
+  'CreateSubscriptionRequest',
+  subscriptionSchemas.CreateSubscriptionRequest,
+)
+publicRegistry.registerSchema(
+  'SubscriptionPlan',
+  subscriptionPlanSchemas.SubscriptionPlan,
+)
+publicRegistry.registerSchema(
+  'SubscriptionPlanListResponse',
+  subscriptionPlanSchemas.SubscriptionPlanListResponse,
+)
+
+// Social schemas
+publicRegistry.registerSchema('Activity', socialActivitySchemas.Activity)
+publicRegistry.registerSchema(
+  'CreateActivityRequest',
+  socialActivitySchemas.CreateActivityRequest,
+)
+publicRegistry.registerSchema('Friend', socialFriendSchemas.Friend)
+publicRegistry.registerSchema(
+  'CreateFriendRequest',
+  socialFriendSchemas.CreateFriendRequest,
+)
+
+// Support schemas
+publicRegistry.registerSchema('Problem', supportProblemSchemas.Problem)
+publicRegistry.registerSchema(
+  'CreateProblemRequest',
+  supportProblemSchemas.CreateProblemRequest,
+)
+
+// Induction schemas
+publicRegistry.registerSchema('Induction', inductionSchemas.Induction)
+publicRegistry.registerSchema(
+  'CreateInductionRequest',
+  inductionSchemas.CreateInductionRequest,
+)
+
+// Stuff schemas
+publicRegistry.registerSchema('Stuff', stuffSchemas.Stuff)
+publicRegistry.registerSchema(
+  'StuffListResponse',
+  stuffSchemas.StuffListResponse,
+)
+
+// Communication schemas
+publicRegistry.registerSchema(
+  'Notification',
+  communicationNotificationSchemas.Notification,
+)
+publicRegistry.registerSchema(
+  'CreateNotificationRequest',
+  communicationNotificationSchemas.CreateNotificationRequest,
+)
+
+// Webhook schemas
+publicRegistry.registerSchema(
+  'StripeWebhookEvent',
+  webhookSchemas.StripeWebhookEvent,
+)
+publicRegistry.registerSchema('WebhookResponse', webhookSchemas.WebhookResponse)
+publicRegistry.registerSchema(
+  'WebhookErrorResponse',
+  webhookSchemas.WebhookErrorResponse,
+)
+
+// Auth routes
+publicRegistry.registerRoute({
+  method: 'post',
+  path: '/auth/login',
+  summary: 'User login',
+  tags: ['Authentication'],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: authLoginSchemas.LoginRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Successful login',
+      content: {
+        'application/json': {
+          schema: authLoginSchemas.LoginResponse,
+        },
+      },
+    },
+    400: {
+      description: 'Invalid credentials',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+// User routes
+publicRegistry.registerRoute({
+  method: 'get',
+  path: '/users/profile',
+  summary: 'Get current user profile',
+  tags: ['Users'],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      description: 'User profile',
+      content: {
+        'application/json': {
+          schema: userProfileSchemas.CurrentUserProfile,
+        },
+      },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+publicRegistry.registerRoute({
+  method: 'patch',
+  path: '/users/profile',
+  summary: 'Update user profile',
+  tags: ['Users'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: userProfileSchemas.UpdateProfileRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Updated profile',
+      content: {
+        'application/json': {
+          schema: userProfileSchemas.CurrentUserProfile,
+        },
+      },
+    },
+  },
+})
+
+// Session routes
+publicRegistry.registerRoute({
+  method: 'post',
+  path: '/sessions/book',
+  summary: 'Book a training session',
+  tags: ['Sessions'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: sessionBookingSchemas.CreateBookingRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Booking created',
+      content: {
+        'application/json': {
+          schema: sessionBookingSchemas.BookingConfirmationResponse,
+        },
+      },
+    },
+  },
+})
+
+// Create session route (trainers only)
+publicRegistry.registerRoute({
+  method: 'post',
+  path: '/sessions',
+  summary: 'Create a training session',
+  tags: ['Sessions'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: sessionSchemas.CreateSessionRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Session created',
+      content: {
+        'application/json': {
+          schema: sessionSchemas.Session,
+        },
+      },
+    },
+    400: {
+      description: 'Invalid session data',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+// Cancel session route
+publicRegistry.registerRoute({
+  method: 'delete',
+  path: '/sessions/{sessionId}/cancel',
+  summary: 'Cancel a session',
+  tags: ['Sessions'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      sessionId: z.string().uuid(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: sessionSchemas.CancelSessionRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Session cancelled',
+      content: {
+        'application/json': {
+          schema: MessageResponse,
+        },
+      },
+    },
+    404: {
+      description: 'Session not found',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+// Add session review route
+publicRegistry.registerRoute({
+  method: 'post',
+  path: '/sessions/{sessionId}/reviews',
+  summary: 'Add a session review',
+  tags: ['Sessions'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      sessionId: z.string().uuid(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: sessionSchemas.CreateSessionReviewRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Review added',
+      content: {
+        'application/json': {
+          schema: sessionSchemas.SessionReview,
+        },
+      },
+    },
+    400: {
+      description: 'Invalid review data',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+// Waiting list routes
+publicRegistry.registerRoute({
+  method: 'post',
+  path: '/sessions/{sessionId}/waiting-list',
+  summary: 'Join session waiting list',
+  tags: ['Sessions'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      sessionId: z.string().uuid(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: waitingListSchemas.JoinWaitingListRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Joined waiting list',
+      content: {
+        'application/json': {
+          schema: waitingListSchemas.JoinWaitingListResponse,
+        },
+      },
+    },
+  },
+})
+
+publicRegistry.registerRoute({
+  method: 'put',
+  path: '/sessions/waiting-list/{id}',
+  summary: 'Update waiting list preferences',
+  tags: ['Sessions'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: waitingListSchemas.UpdateWaitingListRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Preferences updated',
+      content: {
+        'application/json': {
+          schema: MessageResponse,
+        },
+      },
+    },
+  },
+})
+
+publicRegistry.registerRoute({
+  method: 'delete',
+  path: '/sessions/waiting-list/{id}',
+  summary: 'Leave waiting list',
+  tags: ['Sessions'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: waitingListSchemas.LeaveWaitingListRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Left waiting list',
+      content: {
+        'application/json': {
+          schema: waitingListSchemas.LeaveWaitingListResponse,
+        },
+      },
+    },
+  },
+})
+
+// Extra time request
+publicRegistry.registerRoute({
+  method: 'put',
+  path: '/sessions/{sessionId}/extra-time',
+  summary: 'Request extra time for session',
+  tags: ['Sessions'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      sessionId: z.string().uuid(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: sessionBookingSchemas.RequestExtraTimeRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Extra time request processed',
+      content: {
+        'application/json': {
+          schema: sessionBookingSchemas.RequestExtraTimeResponse,
+        },
+      },
+    },
+  },
+})
+
+// Session invitee routes
+publicRegistry.registerRoute({
+  method: 'post',
+  path: '/sessions/{sessionId}/invite',
+  summary: 'Invite guests to session',
+  tags: ['Sessions'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      sessionId: z.string().uuid(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: inviteeSchemas.InviteGuestRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Invitations sent',
+      content: {
+        'application/json': {
+          schema: inviteeSchemas.InviteGuestResponse,
+        },
+      },
+    },
+  },
+})
+
+publicRegistry.registerRoute({
+  method: 'get',
+  path: '/sessions/{sessionId}/invitees',
+  summary: 'Get session invitees',
+  tags: ['Sessions'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      sessionId: z.string().uuid(),
+    }),
+    query: inviteeSchemas.SessionInviteesParams,
+  },
+  responses: {
+    200: {
+      description: 'List of invitees',
+      content: {
+        'application/json': {
+          schema: inviteeSchemas.SessionInviteesResponse,
+        },
+      },
+    },
+  },
+})
+
+publicRegistry.registerRoute({
+  method: 'put',
+  path: '/sessions/invitations/{id}',
+  summary: 'Update invitation',
+  tags: ['Sessions'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: inviteeSchemas.UpdateInvitationRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Invitation updated',
+      content: {
+        'application/json': {
+          schema: inviteeSchemas.UpdateInvitationResponse,
+        },
+      },
+    },
+  },
+})
+
+// Gym routes
+publicRegistry.registerRoute({
+  method: 'get',
+  path: '/gyms',
+  summary: 'Search gyms',
+  tags: ['Gyms'],
+  request: {
+    query: gymSchemas.SearchGymsRequest,
+  },
+  responses: {
+    200: {
+      description: 'List of gyms',
+      content: {
+        'application/json': {
+          schema: gymSchemas.SearchGymsResponse,
+        },
+      },
+    },
+  },
+})
+
+publicRegistry.registerRoute({
+  method: 'get',
+  path: '/gyms/{gymId}',
+  summary: 'Get gym details',
+  tags: ['Gyms'],
+  request: {
+    params: z.object({
+      gymId: z.string().uuid(),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Gym details',
+      content: {
+        'application/json': {
+          schema: gymSchemas.GymDetailsResponse,
+        },
+      },
+    },
+    404: {
+      description: 'Gym not found',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+// Payment routes
+publicRegistry.registerRoute({
+  method: 'get',
+  path: '/credits',
+  summary: 'Get user credits',
+  tags: ['Payments'],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      description: 'User credits',
+      content: {
+        'application/json': {
+          schema: paymentCreditSchemas.GetUserCreditsResponse,
+        },
+      },
+    },
+  },
+})
+
+publicRegistry.registerRoute({
+  method: 'get',
+  path: '/credits/packs',
+  summary: 'Get available credit packs',
+  tags: ['Payments'],
+  responses: {
+    200: {
+      description: 'Available credit packs',
+      content: {
+        'application/json': {
+          schema: paymentCreditSchemas.GetCreditPacksResponse,
+        },
+      },
+    },
+  },
+})
+
+publicRegistry.registerRoute({
+  method: 'post',
+  path: '/credits/purchase',
+  summary: 'Purchase credit pack',
+  tags: ['Payments'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: paymentCreditSchemas.PurchaseCreditPackRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Purchase successful',
+      content: {
+        'application/json': {
+          schema: paymentCreditSchemas.PurchaseCreditPackResponse,
+        },
+      },
+    },
+    400: {
+      description: 'Payment failed',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+// Stripe webhook route (no authentication - uses signature verification)
+publicRegistry.registerRoute({
+  method: 'post',
+  path: '/webhooks/stripe',
+  summary: 'Handle Stripe webhook events',
+  tags: ['Webhooks'],
+  description:
+    'Endpoint for receiving Stripe webhook events. Uses signature verification instead of JWT authentication.',
+  request: {
+    headers: z.object({
+      'stripe-signature': z.string().describe('Stripe webhook signature'),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: webhookSchemas.StripeWebhookEvent,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Webhook processed successfully',
+      content: {
+        'application/json': {
+          schema: webhookSchemas.WebhookResponse,
+        },
+      },
+    },
+    400: {
+      description: 'Invalid webhook signature or payload',
+      content: {
+        'application/json': {
+          schema: webhookSchemas.WebhookErrorResponse,
+        },
+      },
+    },
+    500: {
+      description: 'Webhook processing error',
+      content: {
+        'application/json': {
+          schema: webhookSchemas.WebhookErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+// ============= Admin API =============
+
+const adminRegistry = createSimpleRegistry({
+  title: 'Pika Admin API',
+  version: '1.0.0',
+  description: 'Administrative API for Pika platform management',
+  servers: [
+    {
+      url: `${API_GATEWAY_BASE_URL || 'http://localhost:5500'}/api/admin/v1`,
+      description: 'Local Development',
+    },
+    { url: 'https://api.pika.com/admin/v1', description: 'Production' },
+    { url: 'https://api.staging.pika.com/admin/v1', description: 'Staging' },
+  ],
+})
+
+// Register admin schemas
+adminRegistry.registerSchema('DashboardStats', dashboardSchemas.DashboardStats)
+adminRegistry.registerSchema(
+  'AdminUserDetail',
+  adminUserSchemas.AdminUserDetailResponse,
+)
+adminRegistry.registerSchema(
+  'AdminUserSearchParams',
+  adminUserSchemas.AdminUserQueryParams,
+)
+adminRegistry.registerSchema(
+  'UpdateUserStatusRequest',
+  adminUserSchemas.UpdateUserStatusRequest,
+)
+adminRegistry.registerSchema('AdminGymDetail', adminGymSchemas.AdminGymDetail)
+adminRegistry.registerSchema(
+  'AdminGymSearchParams',
+  adminGymSchemas.AdminGymSearchParams,
+)
+adminRegistry.registerSchema(
+  'VerifyGymRequest',
+  adminGymSchemas.VerifyGymRequest,
+)
+adminRegistry.registerSchema(
+  'CreateGymRequest',
+  adminGymSchemas.CreateGymRequest,
+)
+adminRegistry.registerSchema(
+  'UpdateGymRequest',
+  adminGymSchemas.UpdateGymRequest,
+)
+adminRegistry.registerSchema(
+  'AddGymEquipmentRequest',
+  adminGymSchemas.AddGymEquipmentRequest,
+)
+adminRegistry.registerSchema('GymEquipment', adminGymSchemas.GymEquipment)
+adminRegistry.registerSchema(
+  'UpdateGymPricingRequest',
+  adminGymSchemas.UpdateGymPricingRequest,
+)
+adminRegistry.registerSchema(
+  'SetSpecialHoursRequest',
+  adminGymSchemas.SetSpecialHoursRequest,
+)
+adminRegistry.registerSchema('GymAnalytics', adminGymSchemas.GymAnalytics)
+adminRegistry.registerSchema(
+  'AdminTransactionDetail',
+  adminPaymentSchemas.AdminTransactionDetailResponse,
+)
+adminRegistry.registerSchema(
+  'AdminTransactionQueryParams',
+  adminPaymentSchemas.AdminTransactionQueryParams,
+)
+adminRegistry.registerSchema(
+  'FinancialSummary',
+  adminPaymentSchemas.FinancialSummary,
+)
+adminRegistry.registerSchema(
+  'RefundTransactionRequest',
+  adminPaymentSchemas.RefundTransactionRequest,
+)
+adminRegistry.registerSchema(
+  'ManualAdjustmentRequest',
+  adminPaymentSchemas.ManualAdjustmentRequest,
+)
+adminRegistry.registerSchema(
+  'AdminPromoCodeDetail',
+  adminPaymentSchemas.AdminPromoCodeDetail,
+)
+adminRegistry.registerSchema(
+  'CreatePromoCodeRequest',
+  adminPaymentSchemas.CreatePromoCodeRequest,
+)
+adminRegistry.registerSchema(
+  'UpdatePromoCodeRequest',
+  adminPaymentSchemas.UpdatePromoCodeRequest,
+)
+adminRegistry.registerSchema(
+  'AdminSubscriptionPlanDetail',
+  adminPaymentSchemas.AdminSubscriptionPlanDetail,
+)
+adminRegistry.registerSchema(
+  'CreateSubscriptionPlanRequest',
+  adminPaymentSchemas.CreateSubscriptionPlanRequest,
+)
+adminRegistry.registerSchema(
+  'UpdateSubscriptionPlanRequest',
+  adminPaymentSchemas.UpdateSubscriptionPlanRequest,
+)
+adminRegistry.registerSchema(
+  'FinancialReportRequest',
+  adminPaymentSchemas.FinancialReportRequest,
+)
+adminRegistry.registerSchema(
+  'FinancialReportResponse',
+  adminPaymentSchemas.FinancialReportResponse,
+)
+adminRegistry.registerSchema(
+  'AdminTicketDetail',
+  adminSupportSchemas.AdminTicketDetailResponse,
+)
+adminRegistry.registerSchema(
+  'AdminTicketQueryParams',
+  adminSupportSchemas.AdminTicketQueryParams,
+)
+
+// Session Management schemas
+adminRegistry.registerSchema(
+  'AdminGetAllSessionsQuery',
+  adminSessionSchemas.AdminGetAllSessionsQuery,
+)
+adminRegistry.registerSchema(
+  'ApproveContentSessionRequest',
+  adminSessionSchemas.ApproveContentSessionRequest,
+)
+adminRegistry.registerSchema(
+  'DeclineContentSessionRequest',
+  adminSessionSchemas.DeclineContentSessionRequest,
+)
+adminRegistry.registerSchema(
+  'ForceCheckInRequest',
+  adminSessionSchemas.ForceCheckInRequest,
+)
+adminRegistry.registerSchema(
+  'CleanupExpiredReservationsRequest',
+  adminSessionSchemas.CleanupExpiredReservationsRequest,
+)
+adminRegistry.registerSchema(
+  'SessionAnalyticsQuery',
+  adminSessionAnalyticsSchemas.SessionAnalyticsQuery,
+)
+adminRegistry.registerSchema(
+  'SessionAnalyticsResponse',
+  adminSessionAnalyticsSchemas.SessionAnalyticsResponse,
+)
+
+// ============= Admin Routes =============
+
+// Dashboard route
+adminRegistry.registerRoute({
+  method: 'get',
+  path: '/dashboard/stats',
+  summary: 'Get dashboard statistics',
+  tags: ['Dashboard'],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      description: 'Dashboard statistics',
+      content: {
+        'application/json': {
+          schema: dashboardSchemas.DashboardStats,
+        },
+      },
+    },
+  },
+})
+
+// User Management routes
+adminRegistry.registerRoute({
+  method: 'get',
+  path: '/users',
+  summary: 'List all users with admin details',
+  tags: ['User Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: adminUserSchemas.AdminUserQueryParams,
+  },
+  responses: {
+    200: {
+      description: 'List of users',
+      content: {
+        'application/json': {
+          schema: z.object({
+            data: z.array(adminUserSchemas.AdminUserDetailResponse),
+            pagination: z.object({
+              page: z.number(),
+              limit: z.number(),
+              total: z.number(),
+              totalPages: z.number(),
+            }),
+          }),
+        },
+      },
+    },
+  },
+})
+
+adminRegistry.registerRoute({
+  method: 'get',
+  path: '/users/{id}',
+  summary: 'Get user details',
+  tags: ['User Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'User details',
+      content: {
+        'application/json': {
+          schema: adminUserSchemas.AdminUserDetailResponse,
+        },
+      },
+    },
+  },
+})
+
+adminRegistry.registerRoute({
+  method: 'patch',
+  path: '/users/{id}/status',
+  summary: 'Update user status',
+  tags: ['User Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: adminUserSchemas.UpdateUserStatusRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'User status updated',
+      content: {
+        'application/json': {
+          schema: adminUserSchemas.AdminUserDetailResponse,
+        },
+      },
+    },
+  },
+})
+
+adminRegistry.registerRoute({
+  method: 'put',
+  path: '/users/{id}/ban',
+  summary: 'Ban user',
+  tags: ['User Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            reason: z.string(),
+            duration: z.number().optional(),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'User banned',
+      content: {
+        'application/json': {
+          schema: MessageResponse,
+        },
+      },
+    },
+  },
+})
+
+adminRegistry.registerRoute({
+  method: 'put',
+  path: '/users/{id}/unban',
+  summary: 'Unban user',
+  tags: ['User Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'User unbanned',
+      content: {
+        'application/json': {
+          schema: MessageResponse,
+        },
+      },
+    },
+  },
+})
+
+adminRegistry.registerRoute({
+  method: 'get',
+  path: '/users/email/{email}',
+  summary: 'Get user by email',
+  tags: ['User Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      email: z.string().email(),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'User details',
+      content: {
+        'application/json': {
+          schema: adminUserSchemas.AdminUserDetailResponse,
+        },
+      },
+    },
+    404: {
+      description: 'User not found',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+// Gym Management routes
+adminRegistry.registerRoute({
+  method: 'get',
+  path: '/gyms',
+  summary: 'List all gyms with admin details',
+  tags: ['Gym Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: adminGymSchemas.AdminGymSearchParams,
+  },
+  responses: {
+    200: {
+      description: 'List of gyms',
+      content: {
+        'application/json': {
+          schema: z.object({
+            data: z.array(adminGymSchemas.AdminGymDetail),
+            pagination: z.object({
+              page: z.number(),
+              limit: z.number(),
+              total: z.number(),
+              totalPages: z.number(),
+            }),
+          }),
+        },
+      },
+    },
+  },
+})
+
+adminRegistry.registerRoute({
+  method: 'get',
+  path: '/gyms/{id}',
+  summary: 'Get gym details',
+  tags: ['Gym Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Gym details',
+      content: {
+        'application/json': {
+          schema: adminGymSchemas.AdminGymDetail,
+        },
+      },
+    },
+  },
+})
+
+adminRegistry.registerRoute({
+  method: 'post',
+  path: '/gyms/{id}/verify',
+  summary: 'Verify gym registration',
+  tags: ['Gym Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: adminGymSchemas.VerifyGymRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Gym verification updated',
+      content: {
+        'application/json': {
+          schema: adminGymSchemas.AdminGymDetail,
+        },
+      },
+    },
+  },
+})
+
+// Create gym route
+adminRegistry.registerRoute({
+  method: 'post',
+  path: '/gyms',
+  summary: 'Create a new gym',
+  tags: ['Gym Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: adminGymSchemas.CreateGymRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Gym created successfully',
+      content: {
+        'application/json': {
+          schema: adminGymSchemas.AdminGymDetail,
+        },
+      },
+    },
+    400: {
+      description: 'Invalid gym data',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+// Update gym route
+adminRegistry.registerRoute({
+  method: 'patch',
+  path: '/gyms/{id}',
+  summary: 'Update gym information',
+  tags: ['Gym Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: adminGymSchemas.UpdateGymRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Gym updated successfully',
+      content: {
+        'application/json': {
+          schema: adminGymSchemas.AdminGymDetail,
+        },
+      },
+    },
+    404: {
+      description: 'Gym not found',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+// Delete gym route
+adminRegistry.registerRoute({
+  method: 'delete',
+  path: '/gyms/{id}',
+  summary: 'Delete a gym',
+  tags: ['Gym Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Gym deleted successfully',
+      content: {
+        'application/json': {
+          schema: MessageResponse,
+        },
+      },
+    },
+    404: {
+      description: 'Gym not found',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+// Add gym equipment route
+adminRegistry.registerRoute({
+  method: 'post',
+  path: '/gyms/{id}/equipment',
+  summary: 'Add equipment to gym',
+  tags: ['Gym Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: adminGymSchemas.AddGymEquipmentRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Equipment added successfully',
+      content: {
+        'application/json': {
+          schema: adminGymSchemas.GymEquipment,
+        },
+      },
+    },
+    404: {
+      description: 'Gym not found',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+// Update gym pricing route
+adminRegistry.registerRoute({
+  method: 'patch',
+  path: '/gyms/{id}/pricing',
+  summary: 'Update gym pricing',
+  tags: ['Gym Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: adminGymSchemas.UpdateGymPricingRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Pricing updated successfully',
+      content: {
+        'application/json': {
+          schema: MessageResponse,
+        },
+      },
+    },
+    404: {
+      description: 'Gym not found',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+// Set special hours route
+adminRegistry.registerRoute({
+  method: 'post',
+  path: '/gyms/{id}/special-hours',
+  summary: 'Set special operating hours',
+  tags: ['Gym Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: adminGymSchemas.SetSpecialHoursRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Special hours set successfully',
+      content: {
+        'application/json': {
+          schema: MessageResponse,
+        },
+      },
+    },
+    404: {
+      description: 'Gym not found',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+// Get gym analytics route
+adminRegistry.registerRoute({
+  method: 'get',
+  path: '/gyms/{id}/analytics',
+  summary: 'Get gym analytics',
+  tags: ['Gym Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+    query: z.object({
+      startDate: z.string().optional(),
+      endDate: z.string().optional(),
+      period: z.enum(['7d', '30d', '90d', '1y']).default('30d'),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Gym analytics data',
+      content: {
+        'application/json': {
+          schema: adminGymSchemas.GymAnalytics,
+        },
+      },
+    },
+    404: {
+      description: 'Gym not found',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+// Transaction Management routes
+adminRegistry.registerRoute({
+  method: 'get',
+  path: '/transactions',
+  summary: 'List all transactions',
+  tags: ['Transaction Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: adminPaymentSchemas.AdminTransactionQueryParams,
+  },
+  responses: {
+    200: {
+      description: 'List of transactions',
+      content: {
+        'application/json': {
+          schema: z.object({
+            data: z.array(adminPaymentSchemas.AdminTransactionDetailResponse),
+            pagination: z.object({
+              page: z.number(),
+              limit: z.number(),
+              total: z.number(),
+              totalPages: z.number(),
+            }),
+          }),
+        },
+      },
+    },
+  },
+})
+
+adminRegistry.registerRoute({
+  method: 'get',
+  path: '/transactions/{id}',
+  summary: 'Get transaction details',
+  tags: ['Transaction Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Transaction details',
+      content: {
+        'application/json': {
+          schema: adminPaymentSchemas.AdminTransactionDetailResponse,
+        },
+      },
+    },
+  },
+})
+
+// Financial Management routes
+adminRegistry.registerRoute({
+  method: 'post',
+  path: '/credits/adjustments',
+  summary: 'Create manual credit adjustment',
+  tags: ['Financial Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: adminPaymentSchemas.ManualAdjustmentRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Adjustment created',
+      content: {
+        'application/json': {
+          schema: adminPaymentSchemas.AdminTransactionDetailResponse,
+        },
+      },
+    },
+    400: {
+      description: 'Invalid adjustment data',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+adminRegistry.registerRoute({
+  method: 'get',
+  path: '/payments/reports',
+  summary: 'Generate financial reports',
+  tags: ['Financial Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: adminPaymentSchemas.FinancialReportRequest,
+  },
+  responses: {
+    200: {
+      description: 'Financial report data',
+      content: {
+        'application/json': {
+          schema: adminPaymentSchemas.FinancialReportResponse,
+        },
+      },
+    },
+  },
+})
+
+adminRegistry.registerRoute({
+  method: 'post',
+  path: '/transactions/{id}/refund',
+  summary: 'Refund a transaction',
+  tags: ['Financial Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: adminPaymentSchemas.RefundTransactionRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Refund processed',
+      content: {
+        'application/json': {
+          schema: adminPaymentSchemas.AdminTransactionDetailResponse,
+        },
+      },
+    },
+    404: {
+      description: 'Transaction not found',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+// Promo Code Management routes
+adminRegistry.registerRoute({
+  method: 'post',
+  path: '/promo-codes',
+  summary: 'Create promo code',
+  tags: ['Financial Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: adminPaymentSchemas.CreatePromoCodeRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Promo code created',
+      content: {
+        'application/json': {
+          schema: adminPaymentSchemas.AdminPromoCodeDetail,
+        },
+      },
+    },
+    400: {
+      description: 'Invalid promo code data',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+adminRegistry.registerRoute({
+  method: 'patch',
+  path: '/promo-codes/{id}',
+  summary: 'Update promo code',
+  tags: ['Financial Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: adminPaymentSchemas.UpdatePromoCodeRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Promo code updated',
+      content: {
+        'application/json': {
+          schema: adminPaymentSchemas.AdminPromoCodeDetail,
+        },
+      },
+    },
+    404: {
+      description: 'Promo code not found',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+adminRegistry.registerRoute({
+  method: 'get',
+  path: '/promo-codes',
+  summary: 'List promo codes',
+  tags: ['Financial Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: adminPaymentSchemas.PromoCodeSearchParams,
+  },
+  responses: {
+    200: {
+      description: 'List of promo codes',
+      content: {
+        'application/json': {
+          schema: adminPaymentSchemas.PromoCodeListResponse,
+        },
+      },
+    },
+  },
+})
+
+// Subscription Plan Management routes
+adminRegistry.registerRoute({
+  method: 'get',
+  path: '/subscriptions/all',
+  summary: 'List all subscriptions',
+  tags: ['Financial Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: z.object({
+      status: z.enum(['ACTIVE', 'CANCELLED', 'EXPIRED']).optional(),
+      planId: z.string().uuid().optional(),
+      userId: UserId.optional(),
+      page: z.number().int().positive().default(1),
+      limit: z.number().int().positive().max(100).default(20),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'List of subscriptions',
+      content: {
+        'application/json': {
+          schema: z.object({
+            data: z.array(
+              z.object({
+                id: UUID,
+                userId: UserId,
+                planId: UUID,
+                status: z.enum(['ACTIVE', 'CANCELLED', 'EXPIRED']),
+                startDate: DateTime,
+                endDate: DateTime.optional(),
+                nextBillingDate: DateTime.optional(),
+              }),
+            ),
+            pagination: z.object({
+              page: z.number(),
+              limit: z.number(),
+              total: z.number(),
+              totalPages: z.number(),
+            }),
+          }),
+        },
+      },
+    },
+  },
+})
+
+adminRegistry.registerRoute({
+  method: 'post',
+  path: '/subscriptions/plans',
+  summary: 'Create subscription plan',
+  tags: ['Financial Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: adminPaymentSchemas.CreateSubscriptionPlanRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Subscription plan created',
+      content: {
+        'application/json': {
+          schema: adminPaymentSchemas.AdminSubscriptionPlanDetail,
+        },
+      },
+    },
+    400: {
+      description: 'Invalid plan data',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+adminRegistry.registerRoute({
+  method: 'patch',
+  path: '/subscriptions/plans/{id}',
+  summary: 'Update subscription plan',
+  tags: ['Financial Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: adminPaymentSchemas.UpdateSubscriptionPlanRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Subscription plan updated',
+      content: {
+        'application/json': {
+          schema: adminPaymentSchemas.AdminSubscriptionPlanDetail,
+        },
+      },
+    },
+    404: {
+      description: 'Plan not found',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+adminRegistry.registerRoute({
+  method: 'get',
+  path: '/subscriptions/plans',
+  summary: 'List subscription plans',
+  tags: ['Financial Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: adminPaymentSchemas.SubscriptionPlanSearchParams,
+  },
+  responses: {
+    200: {
+      description: 'List of subscription plans',
+      content: {
+        'application/json': {
+          schema: adminPaymentSchemas.SubscriptionPlanListResponse,
+        },
+      },
+    },
+  },
+})
+
+// Support Ticket Management routes
+adminRegistry.registerRoute({
+  method: 'get',
+  path: '/support/tickets',
+  summary: 'List support tickets',
+  tags: ['Support Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: adminSupportSchemas.AdminTicketQueryParams,
+  },
+  responses: {
+    200: {
+      description: 'List of support tickets',
+      content: {
+        'application/json': {
+          schema: z.object({
+            data: z.array(adminSupportSchemas.AdminTicketDetailResponse),
+            pagination: z.object({
+              page: z.number(),
+              limit: z.number(),
+              total: z.number(),
+              totalPages: z.number(),
+            }),
+          }),
+        },
+      },
+    },
+  },
+})
+
+adminRegistry.registerRoute({
+  method: 'get',
+  path: '/support/tickets/{id}',
+  summary: 'Get support ticket details',
+  tags: ['Support Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Support ticket details',
+      content: {
+        'application/json': {
+          schema: adminSupportSchemas.AdminTicketDetailResponse,
+        },
+      },
+    },
+  },
+})
+
+// Communication Management routes
+adminRegistry.registerRoute({
+  method: 'post',
+  path: '/templates/seed',
+  summary: 'Seed default email/SMS templates',
+  tags: ['Communication Management'],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    201: {
+      description: 'Templates seeded successfully',
+      content: {
+        'application/json': {
+          schema: z.object({
+            created: z.number(),
+            message: z.string(),
+          }),
+        },
+      },
+    },
+  },
+})
+
+// Session Management routes
+adminRegistry.registerRoute({
+  method: 'get',
+  path: '/sessions/admin/analytics',
+  summary: 'Get session analytics',
+  tags: ['Session Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: adminSessionAnalyticsSchemas.SessionAnalyticsQuery,
+  },
+  responses: {
+    200: {
+      description: 'Session analytics data',
+      content: {
+        'application/json': {
+          schema: adminSessionAnalyticsSchemas.SessionAnalyticsResponse,
+        },
+      },
+    },
+  },
+})
+
+adminRegistry.registerRoute({
+  method: 'get',
+  path: '/sessions/admin/all',
+  summary: 'List all sessions with admin details',
+  tags: ['Session Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: adminSessionSchemas.AdminGetAllSessionsQuery,
+  },
+  responses: {
+    200: {
+      description: 'List of sessions',
+      content: {
+        'application/json': {
+          schema: z.object({
+            data: z.array(z.any()), // TODO: Add proper session detail schema
+            pagination: z.object({
+              page: z.number(),
+              limit: z.number(),
+              total: z.number(),
+              totalPages: z.number(),
+            }),
+          }),
+        },
+      },
+    },
+  },
+})
+
+adminRegistry.registerRoute({
+  method: 'get',
+  path: '/sessions/admin/{id}',
+  summary: 'Get session details',
+  tags: ['Session Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: adminSessionSchemas.SessionIdParam,
+  },
+  responses: {
+    200: {
+      description: 'Session details',
+      content: {
+        'application/json': {
+          schema: z.any(), // TODO: Add proper session detail schema
+        },
+      },
+    },
+  },
+})
+
+adminRegistry.registerRoute({
+  method: 'delete',
+  path: '/sessions/admin/{id}',
+  summary: 'Delete session',
+  tags: ['Session Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: adminSessionSchemas.SessionIdParam,
+  },
+  responses: {
+    200: {
+      description: 'Session deleted',
+      content: {
+        'application/json': {
+          schema: MessageResponse,
+        },
+      },
+    },
+  },
+})
+
+adminRegistry.registerRoute({
+  method: 'post',
+  path: '/sessions/admin/{id}/approve',
+  summary: 'Approve content session',
+  tags: ['Session Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: adminSessionSchemas.SessionIdParam,
+    body: {
+      content: {
+        'application/json': {
+          schema: adminSessionSchemas.ApproveContentSessionRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Session approved',
+      content: {
+        'application/json': {
+          schema: MessageResponse,
+        },
+      },
+    },
+  },
+})
+
+adminRegistry.registerRoute({
+  method: 'post',
+  path: '/sessions/admin/{id}/decline',
+  summary: 'Decline content session',
+  tags: ['Session Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: adminSessionSchemas.SessionIdParam,
+    body: {
+      content: {
+        'application/json': {
+          schema: adminSessionSchemas.DeclineContentSessionRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Session declined',
+      content: {
+        'application/json': {
+          schema: MessageResponse,
+        },
+      },
+    },
+  },
+})
+
+adminRegistry.registerRoute({
+  method: 'post',
+  path: '/sessions/admin/force-checkin',
+  summary: 'Force check-in user to session',
+  tags: ['Session Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: adminSessionSchemas.ForceCheckInRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'User checked in',
+      content: {
+        'application/json': {
+          schema: MessageResponse,
+        },
+      },
+    },
+  },
+})
+
+adminRegistry.registerRoute({
+  method: 'post',
+  path: '/sessions/admin/cleanup-expired-reservations',
+  summary: 'Cleanup expired session reservations',
+  tags: ['Session Management'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: adminSessionSchemas.CleanupExpiredReservationsRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Cleanup result',
+      content: {
+        'application/json': {
+          schema: z.object({
+            cleaned: z.number(),
+            message: z.string(),
+          }),
+        },
+      },
+    },
+  },
+})
+
+// ============= Internal API =============
+
+const internalRegistry = createSimpleRegistry({
+  title: 'Pika Internal API',
+  version: '1.0.0',
+  description: 'Internal service-to-service API',
+  servers: [
+    {
+      url: `${API_GATEWAY_BASE_URL || 'http://localhost:5500'}/api/internal/v1`,
+      description: 'Local Development',
+    },
+    {
+      url: 'https://api.pika.com/internal/v1',
+      description: 'Production Internal',
+    },
+    {
+      url: 'https://api.staging.pika.com/internal/v1',
+      description: 'Staging Internal',
+    },
+  ],
+})
+
+// Register internal schemas
+internalRegistry.registerSchema('ServiceHealth', healthSchemas.ServiceHealth)
+internalRegistry.registerSchema(
+  'ServiceInstance',
+  internalDiscoverySchemas.ServiceInstance,
+)
+internalRegistry.registerSchema(
+  'RegisterServiceRequest',
+  internalDiscoverySchemas.RegisterServiceRequest,
+)
+internalRegistry.registerSchema(
+  'RegisterServiceResponse',
+  internalDiscoverySchemas.RegisterServiceResponse,
+)
+internalRegistry.registerSchema(
+  'ServiceRegistryResponse',
+  internalDiscoverySchemas.ServiceRegistryResponse,
+)
+internalRegistry.registerSchema(
+  'ServiceEndpointsResponse',
+  internalDiscoverySchemas.ServiceEndpointsResponse,
+)
+internalRegistry.registerSchema(
+  'DeregisterServiceRequest',
+  internalDiscoverySchemas.DeregisterServiceRequest,
+)
+internalRegistry.registerSchema(
+  'DeregisterServiceResponse',
+  internalDiscoverySchemas.DeregisterServiceResponse,
+)
+internalRegistry.registerSchema(
+  'ServiceConfigResponse',
+  internalDiscoverySchemas.ServiceConfigResponse,
+)
+
+// Auth service schemas
+internalRegistry.registerSchema(
+  'ValidateTokenRequest',
+  internalAuthSchemas.ValidateTokenRequest,
+)
+internalRegistry.registerSchema(
+  'TokenValidationResponse',
+  internalAuthSchemas.TokenValidationResponse,
+)
+internalRegistry.registerSchema(
+  'GetUserByEmailRequest',
+  internalAuthSchemas.GetUserByEmailRequest,
+)
+internalRegistry.registerSchema(
+  'InternalUserResponse',
+  internalAuthSchemas.InternalUserResponse,
+)
+
+// Communication service schemas
+internalRegistry.registerSchema(
+  'SendSystemNotificationRequest',
+  internalCommunicationSchemas.SendSystemNotificationRequest,
+)
+internalRegistry.registerSchema(
+  'SendTransactionalEmailRequest',
+  internalCommunicationSchemas.SendTransactionalEmailRequest,
+)
+internalRegistry.registerSchema(
+  'SendTransactionalEmailResponse',
+  internalCommunicationSchemas.SendTransactionalEmailResponse,
+)
+internalRegistry.registerSchema(
+  'SendSystemNotificationResponse',
+  internalCommunicationSchemas.SendSystemNotificationResponse,
+)
+
+// Session service schemas
+internalRegistry.registerSchema(
+  'InternalSessionResponse',
+  internalSessionSchemas.InternalSessionResponse,
+)
+internalRegistry.registerSchema(
+  'CheckConflictsRequest',
+  internalSessionSchemas.CheckConflictsRequest,
+)
+internalRegistry.registerSchema(
+  'ConflictCheckResponse',
+  internalSessionSchemas.ConflictCheckResponse,
+)
+internalRegistry.registerSchema(
+  'UpdateSessionStatusRequest',
+  internalSessionSchemas.UpdateSessionStatusRequest,
+)
+internalRegistry.registerSchema(
+  'BatchUpdateStatusRequest',
+  internalSessionSchemas.BatchUpdateStatusRequest,
+)
+
+// User service schemas
+internalRegistry.registerSchema(
+  'InternalUserDetailResponse',
+  internalUserSchemas.InternalUserDetailResponse,
+)
+internalRegistry.registerSchema(
+  'BatchGetUsersRequest',
+  internalUserSchemas.BatchGetUsersRequest,
+)
+internalRegistry.registerSchema(
+  'UpdateUserInternalRequest',
+  internalUserSchemas.UpdateUserInternalRequest,
+)
+
+// Subscription service schemas
+internalRegistry.registerSchema(
+  'ProcessSubscriptionCreditsRequest',
+  internalSubscriptionSchemas.ProcessSubscriptionCreditsRequest,
+)
+internalRegistry.registerSchema(
+  'UpdateUserMembershipRequest',
+  internalSubscriptionSchemas.UpdateUserMembershipRequest,
+)
+internalRegistry.registerSchema(
+  'CreateSubscriptionFromStripeRequest',
+  internalSubscriptionSchemas.CreateSubscriptionFromStripeRequest,
+)
+internalRegistry.registerSchema(
+  'UpdateSubscriptionStatusRequest',
+  internalSubscriptionSchemas.UpdateSubscriptionStatusRequest,
+)
+
+// Health check route
+internalRegistry.registerRoute({
+  method: 'get',
+  path: '/health',
+  summary: 'Service health check',
+  tags: ['Health'],
+  security: [{ 'x-api-key': [] }],
+  responses: {
+    200: {
+      description: 'Service is healthy',
+      content: {
+        'application/json': {
+          schema: healthSchemas.ServiceHealth,
+        },
+      },
+    },
+  },
+})
+
+// Service Registry route
+internalRegistry.registerRoute({
+  method: 'get',
+  path: '/services/registry',
+  summary: 'Get service registry',
+  tags: ['Service Discovery'],
+  security: [{ 'x-api-key': [] }],
+  request: {
+    query: internalDiscoverySchemas.ServiceRegistryQuery,
+  },
+  responses: {
+    200: {
+      description: 'Service registry',
+      content: {
+        'application/json': {
+          schema: internalDiscoverySchemas.ServiceRegistryResponse,
+        },
+      },
+    },
+  },
+})
+
+// Register service route
+internalRegistry.registerRoute({
+  method: 'post',
+  path: '/services/register',
+  summary: 'Register service instance',
+  tags: ['Service Discovery'],
+  security: [{ 'x-api-key': [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: internalDiscoverySchemas.RegisterServiceRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Service registered',
+      content: {
+        'application/json': {
+          schema: internalDiscoverySchemas.RegisterServiceResponse,
+        },
+      },
+    },
+    400: {
+      description: 'Invalid registration data',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+// Deregister service route
+internalRegistry.registerRoute({
+  method: 'delete',
+  path: '/services/{instanceId}/deregister',
+  summary: 'Deregister service instance',
+  tags: ['Service Discovery'],
+  security: [{ 'x-api-key': [] }],
+  request: {
+    params: z.object({
+      instanceId: z.string().uuid(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: internalDiscoverySchemas.DeregisterServiceRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Service deregistered',
+      content: {
+        'application/json': {
+          schema: internalDiscoverySchemas.DeregisterServiceResponse,
+        },
+      },
+    },
+    404: {
+      description: 'Service instance not found',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+// Get service endpoints route
+internalRegistry.registerRoute({
+  method: 'get',
+  path: '/services/{serviceName}/endpoints',
+  summary: 'Get service endpoints',
+  tags: ['Service Discovery'],
+  security: [{ 'x-api-key': [] }],
+  request: {
+    params: z.object({
+      serviceName: z.string(),
+    }),
+    query: z.object({
+      environment: internalDiscoverySchemas.EnvironmentType.optional(),
+      healthyOnly: z.boolean().default(true),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Service endpoints',
+      content: {
+        'application/json': {
+          schema: internalDiscoverySchemas.ServiceEndpointsResponse,
+        },
+      },
+    },
+    404: {
+      description: 'Service not found',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+// Get service configuration route
+internalRegistry.registerRoute({
+  method: 'get',
+  path: '/config/{serviceName}',
+  summary: 'Get service configuration',
+  tags: ['Service Discovery'],
+  security: [{ 'x-api-key': [] }],
+  request: {
+    params: z.object({
+      serviceName: z.string(),
+    }),
+    query: internalDiscoverySchemas.ServiceConfigRequest,
+  },
+  responses: {
+    200: {
+      description: 'Service configuration',
+      content: {
+        'application/json': {
+          schema: internalDiscoverySchemas.ServiceConfigResponse,
+        },
+      },
+    },
+    404: {
+      description: 'Service configuration not found',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+// Auth Service Internal Routes
+internalRegistry.registerRoute({
+  method: 'post',
+  path: '/auth/validate-token',
+  summary: 'Validate JWT token',
+  tags: ['Auth Service'],
+  security: [{ 'x-api-key': [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: internalAuthSchemas.ValidateTokenRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Token validation result',
+      content: {
+        'application/json': {
+          schema: internalAuthSchemas.TokenValidationResponse,
+        },
+      },
+    },
+  },
+})
+
+internalRegistry.registerRoute({
+  method: 'post',
+  path: '/auth/user-by-email',
+  summary: 'Get user by email',
+  tags: ['Auth Service'],
+  security: [{ 'x-api-key': [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: internalAuthSchemas.GetUserByEmailRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'User details',
+      content: {
+        'application/json': {
+          schema: internalAuthSchemas.InternalUserResponse,
+        },
+      },
+    },
+    404: {
+      description: 'User not found',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+// Communication Service Internal Routes
+internalRegistry.registerRoute({
+  method: 'post',
+  path: '/notifications/system',
+  summary: 'Send system notification',
+  tags: ['Communication Service'],
+  security: [{ 'x-api-key': [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: internalCommunicationSchemas.SendSystemNotificationRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Notification sent',
+      content: {
+        'application/json': {
+          schema: internalCommunicationSchemas.SendSystemNotificationResponse,
+        },
+      },
+    },
+  },
+})
+
+internalRegistry.registerRoute({
+  method: 'post',
+  path: '/emails/transactional',
+  summary: 'Send transactional email',
+  tags: ['Communication Service'],
+  security: [{ 'x-api-key': [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: internalCommunicationSchemas.SendTransactionalEmailRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Email sent',
+      content: {
+        'application/json': {
+          schema: internalCommunicationSchemas.SendTransactionalEmailResponse,
+        },
+      },
+    },
+  },
+})
+
+// Session Service Internal Routes
+internalRegistry.registerRoute({
+  method: 'get',
+  path: '/sessions/{id}',
+  summary: 'Get session by ID',
+  tags: ['Session Service'],
+  security: [{ 'x-api-key': [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Session details',
+      content: {
+        'application/json': {
+          schema: internalSessionSchemas.InternalSessionResponse,
+        },
+      },
+    },
+    404: {
+      description: 'Session not found',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+internalRegistry.registerRoute({
+  method: 'post',
+  path: '/sessions/conflicts',
+  summary: 'Check for scheduling conflicts',
+  tags: ['Session Service'],
+  security: [{ 'x-api-key': [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: internalSessionSchemas.CheckConflictsRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Conflict check result',
+      content: {
+        'application/json': {
+          schema: internalSessionSchemas.ConflictCheckResponse,
+        },
+      },
+    },
+  },
+})
+
+internalRegistry.registerRoute({
+  method: 'get',
+  path: '/sessions/by-user/{userId}',
+  summary: 'Get sessions by user',
+  tags: ['Session Service'],
+  security: [{ 'x-api-key': [] }],
+  request: {
+    params: z.object({
+      userId: z.string().uuid(),
+    }),
+    query: z.object({
+      status: z.string().optional(),
+      fromDate: z.string().optional(),
+      toDate: z.string().optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'User sessions',
+      content: {
+        'application/json': {
+          schema: z.array(internalSessionSchemas.InternalSessionResponse),
+        },
+      },
+    },
+  },
+})
+
+internalRegistry.registerRoute({
+  method: 'put',
+  path: '/sessions/{id}/status',
+  summary: 'Update session status',
+  tags: ['Session Service'],
+  security: [{ 'x-api-key': [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: internalSessionSchemas.UpdateSessionStatusRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Session updated',
+      content: {
+        'application/json': {
+          schema: internalSessionSchemas.InternalSessionResponse,
+        },
+      },
+    },
+  },
+})
+
+internalRegistry.registerRoute({
+  method: 'post',
+  path: '/sessions/batch/status',
+  summary: 'Batch update session statuses',
+  tags: ['Session Service'],
+  security: [{ 'x-api-key': [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: internalSessionSchemas.BatchUpdateStatusRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Sessions updated',
+      content: {
+        'application/json': {
+          schema: z.object({
+            updated: z.number(),
+            failed: z.number(),
+          }),
+        },
+      },
+    },
+  },
+})
+
+// User Service Internal Routes
+internalRegistry.registerRoute({
+  method: 'get',
+  path: '/users/{id}',
+  summary: 'Get user details',
+  tags: ['User Service'],
+  security: [{ 'x-api-key': [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'User details',
+      content: {
+        'application/json': {
+          schema: internalUserSchemas.InternalUserDetailResponse,
+        },
+      },
+    },
+    404: {
+      description: 'User not found',
+      content: {
+        'application/json': {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+})
+
+internalRegistry.registerRoute({
+  method: 'post',
+  path: '/users/batch',
+  summary: 'Get multiple users',
+  tags: ['User Service'],
+  security: [{ 'x-api-key': [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: internalUserSchemas.BatchGetUsersRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'User list',
+      content: {
+        'application/json': {
+          schema: z.array(internalUserSchemas.InternalUserDetailResponse),
+        },
+      },
+    },
+  },
+})
+
+internalRegistry.registerRoute({
+  method: 'patch',
+  path: '/users/{id}',
+  summary: 'Update user internally',
+  tags: ['User Service'],
+  security: [{ 'x-api-key': [] }],
+  request: {
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: internalUserSchemas.UpdateUserInternalRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'User updated',
+      content: {
+        'application/json': {
+          schema: internalUserSchemas.InternalUserDetailResponse,
+        },
+      },
+    },
+  },
+})
+
+// Subscription Service Internal Routes
+internalRegistry.registerRoute({
+  method: 'post',
+  path: '/subscriptions/process-credits',
+  summary: 'Process subscription credits',
+  tags: ['Subscription Service'],
+  security: [{ 'x-api-key': [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: internalSubscriptionSchemas.ProcessSubscriptionCreditsRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Credits processed',
+      content: {
+        'application/json': {
+          schema: MessageResponse,
+        },
+      },
+    },
+  },
+})
+
+internalRegistry.registerRoute({
+  method: 'post',
+  path: '/subscriptions/user-membership',
+  summary: 'Update user membership status',
+  tags: ['Subscription Service'],
+  security: [{ 'x-api-key': [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: internalSubscriptionSchemas.UpdateUserMembershipRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Membership updated',
+      content: {
+        'application/json': {
+          schema: MessageResponse,
+        },
+      },
+    },
+  },
+})
+
+internalRegistry.registerRoute({
+  method: 'post',
+  path: '/subscriptions/from-stripe',
+  summary: 'Create subscription from Stripe',
+  tags: ['Subscription Service'],
+  security: [{ 'x-api-key': [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema:
+            internalSubscriptionSchemas.CreateSubscriptionFromStripeRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Subscription created',
+      content: {
+        'application/json': {
+          schema: z.object({
+            id: z.string(),
+            status: z.string(),
+          }),
+        },
+      },
+    },
+  },
+})
+
+internalRegistry.registerRoute({
+  method: 'put',
+  path: '/subscriptions/status',
+  summary: 'Update subscription status',
+  tags: ['Subscription Service'],
+  security: [{ 'x-api-key': [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: internalSubscriptionSchemas.UpdateSubscriptionStatusRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Status updated',
+      content: {
+        'application/json': {
+          schema: MessageResponse,
+        },
+      },
+    },
+  },
+})
+
+// ============= Generate All Specs =============
+
+try {
+  mkdirSync(OUTPUT_DIR, { recursive: true })
+
+  // Generate Public API
+  const publicSpec = publicRegistry.generateDocument()
+
+  // Add security schemes
+  publicSpec.components = publicSpec.components || {}
+  publicSpec.components.securitySchemes = {
+    bearerAuth: {
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+    },
+  }
+
+  writeFileSync(
+    join(OUTPUT_DIR, 'public-api.json'),
+    JSON.stringify(publicSpec, null, 2),
+  )
+  console.log('✅ Generated public-api.json')
+
+  // Generate Admin API
+  const adminSpec = adminRegistry.generateDocument()
+
+  adminSpec.components = adminSpec.components || {}
+  adminSpec.components.securitySchemes = {
+    bearerAuth: {
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+    },
+  }
+
+  writeFileSync(
+    join(OUTPUT_DIR, 'admin-api.json'),
+    JSON.stringify(adminSpec, null, 2),
+  )
+  console.log('✅ Generated admin-api.json')
+
+  // Generate Internal API
+  const internalSpec = internalRegistry.generateDocument()
+
+  internalSpec.components = internalSpec.components || {}
+  internalSpec.components.securitySchemes = {
+    'x-api-key': {
+      type: 'apiKey',
+      in: 'header',
+      name: 'x-api-key',
+    },
+  }
+
+  writeFileSync(
+    join(OUTPUT_DIR, 'internal-api.json'),
+    JSON.stringify(internalSpec, null, 2),
+  )
+  console.log('✅ Generated internal-api.json')
+
+  // Generate Combined Spec
+  const combinedSpec = {
+    openapi: '3.1.0',
+    info: {
+      title: 'Pika Combined API',
+      version: '1.0.0',
+      description: 'All Pika APIs combined',
+    },
+    servers: [
+      {
+        url: `${API_GATEWAY_BASE_URL || 'http://localhost:5500'}/api/v1`,
+        description: 'Local Development (All APIs)',
+      },
+      { url: 'https://api.pika.com/v1', description: 'Production' },
+      { url: 'https://api.staging.pika.com/v1', description: 'Staging' },
+    ],
+    tags: [
+      { name: 'Authentication', description: 'User authentication endpoints' },
+      { name: 'Users', description: 'User management endpoints' },
+      { name: 'Sessions', description: 'Session booking endpoints' },
+      { name: 'Dashboard', description: 'Admin dashboard endpoints' },
+      { name: 'Health', description: 'Service health endpoints' },
+    ],
+    paths: {
+      // Keep original paths but tag them appropriately
+      ...(publicSpec.paths || {}),
+      ...(adminSpec.paths || {}),
+      ...(internalSpec.paths || {}),
+    },
+    components: {
+      schemas: {
+        ...publicSpec.components?.schemas,
+        ...adminSpec.components?.schemas,
+        ...internalSpec.components?.schemas,
+      },
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+        'x-api-key': {
+          type: 'apiKey',
+          in: 'header',
+          name: 'x-api-key',
+        },
+      },
+    },
+  }
+
+  writeFileSync(
+    join(OUTPUT_DIR, 'all-apis.json'),
+    JSON.stringify(combinedSpec, null, 2),
+  )
+  console.log('✅ Generated all-apis.json')
+
+  console.log('\n📁 All OpenAPI specifications generated in:', OUTPUT_DIR)
+} catch (error) {
+  console.error('❌ Error:', error)
+  process.exit(1)
+}

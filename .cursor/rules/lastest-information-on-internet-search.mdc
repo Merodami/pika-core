@@ -1,0 +1,6 @@
+---
+description: 
+globs: *
+alwaysApply: false
+---
+When searching for recent news, use the current year (2025) instead of previous years, or simply use the "recent" keyword to get the latest information

@@ -1,0 +1,61 @@
+{
+  "name": "@pika/api-gateway",
+  "version": "0.0.0",
+  "private": true,
+  "description": "API Gateway with rate limiting and common middleware for services",
+  "author": "Damian Meroni",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "main": "dist/api/server.js",
+  "types": "dist/api/server.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/api/server.js",
+      "types": "./dist/api/server.d.ts"
+    },
+    "./server": {
+      "import": "./dist/api/server.js",
+      "types": "./dist/api/server.d.ts"
+    }
+  },
+  "dependencies": {
+    "@pika/api": "workspace:^",
+    "@pika/auth": "workspace:^",
+    "@pika/environment": "workspace:^",
+    "@pika/http": "workspace:^",
+    "@pika/shared": "workspace:^",
+    "@pika/types": "workspace:^",
+    "express": "^5.1.0",
+    "http-proxy-middleware": "^3.0.5",
+    "zod": "^4.0.10",
+    "zod-validation-error": "^4.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.1.0",
+    "typescript": "^5.8.3"
+  },
+  "depcheck": {
+    "ignore": [
+      "nx",
+      "ts-node",
+      "tsconfig-paths"
+    ],
+    "parsers": {
+      "**/*.ts": "typescript"
+    },
+    "detectors": [
+      "requireCallExpression",
+      "importDeclaration",
+      "typescriptImportEqualsDeclaration"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pika/pika.git",
+    "directory": "packages/api-gateway"
+  },
+  "homepage": "https://github.com/pikaipikae/main/packages/api-gateway",
+  "bugs": {
+    "url": "https://github.com/pikaipikaues"
+  }
+}

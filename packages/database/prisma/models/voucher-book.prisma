@@ -1,0 +1,152 @@
+/// Voucher books for PDF generation
+model VoucherBook {
+  id                String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title             String             @db.VarChar(255)
+  edition           String?            @db.VarChar(100) // e.g., "January 2024", "Special Edition", "North Region"
+  bookType          VoucherBookType    @default(monthly) @map("book_type")
+  month             Int?               // 1-12 (optional for non-monthly books)
+  year              Int                // e.g., 2024
+  status            VoucherBookStatus  @default(draft)
+  totalPages        Int                @default(24) @map("total_pages")
+  publishedAt       DateTime?          @map("published_at") @db.Timestamptz(6)
+  coverImageUrl     String?            @map("cover_image_url") @db.VarChar(500) // Front cover image
+  backImageUrl      String?            @map("back_image_url") @db.VarChar(500)  // Back cover image
+  pdfUrl            String?            @map("pdf_url") @db.VarChar(500)
+  pdfGeneratedAt    DateTime?          @map("pdf_generated_at") @db.Timestamptz(6)
+  metadata          Json?              // Book metadata (edition number, distribution info, region, etc.)
+  createdBy         String             @map("created_by") @db.Uuid // User who created the book
+  updatedBy         String?            @map("updated_by") @db.Uuid // User who last updated the book
+  createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime           @default(now()) @map("updated_at") @db.Timestamptz(6) @updatedAt
+  deletedAt         DateTime?          @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  pages             VoucherBookPage[]
+  distributions     BookDistribution[]
+  createdByUser     User               @relation("VoucherBookCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser     User?              @relation("VoucherBookUpdatedBy", fields: [updatedBy], references: [id])
+  
+  @@index([status])
+  @@index([year, month])
+  @@index([bookType])
+  @@index([edition])
+  @@index([status, year, month]) // For filtering published books by date
+  @@index([bookType, status]) // For filtering by type and status
+  @@index([pdfGeneratedAt]) // For finding recently generated PDFs
+  @@index([publishedAt]) // For sorting by publication date
+  @@index([createdAt]) // For default sorting
+  @@index([deletedAt]) // For soft delete filtering
+  @@index([createdBy]) // For filtering by creator
+  @@index([updatedBy]) // For filtering by updater
+  @@map("voucher_books")
+  @@schema("files")
+}
+
+/// Pages within a voucher book
+model VoucherBookPage {
+  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bookId            String            @map("book_id") @db.Uuid
+  pageNumber        Int               @map("page_number")
+  layoutType        PageLayoutType    @default(standard) @map("layout_type")
+  metadata          Json?             // Page-specific metadata
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime          @default(now()) @map("updated_at") @db.Timestamptz(6) @updatedAt
+
+  // Relations
+  book              VoucherBook       @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  adPlacements      AdPlacement[]
+  
+  @@unique([bookId, pageNumber]) // One page number per book
+  @@index([bookId])
+  @@map("voucher_book_pages")
+  @@schema("files")
+}
+
+/// Flexible content placements on voucher book pages (vouchers, images, ads)
+model AdPlacement {
+  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  pageId            String            @map("page_id") @db.Uuid
+  contentType       ContentType       @default(voucher) @map("content_type") // VOUCHER, IMAGE, AD
+  position          Int               // Starting position 1-8 for standard layout
+  size              AdSize            @default(single) // SINGLE, QUARTER, HALF, FULL
+  spacesUsed        Int               @default(1) @map("spaces_used") // 1, 2, 4, or 8 spaces
+  imageUrl          String?           @map("image_url") @db.VarChar(500) // Main content image
+  qrCodePayload     String?           @map("qr_code_payload") @db.Text // JWT payload for QR codes
+  shortCode         String?           @map("short_code") @db.VarChar(20) // Human-readable code
+  title             String?           @db.VarChar(255) // Content title
+  description       String?           @db.Text // Content description
+  metadata          Json?             // Placement metadata (design settings, pricing, etc.)
+  createdBy         String            @map("created_by") @db.Uuid // User who created the placement
+  updatedBy         String?           @map("updated_by") @db.Uuid // User who last updated the placement
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime          @default(now()) @map("updated_at") @db.Timestamptz(6) @updatedAt
+
+  // Relations
+  page              VoucherBookPage   @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  createdByUser     User              @relation("AdPlacementCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser     User?             @relation("AdPlacementUpdatedBy", fields: [updatedBy], references: [id])
+  
+  @@unique([pageId, position]) // One content per starting position per page
+  @@index([pageId])
+  @@index([contentType])
+  @@index([createdBy])
+  @@index([updatedBy])
+  @@map("ad_placements")
+  @@schema("files")
+}
+
+/// Tracking for PDF book distribution to businesses/providers
+model BookDistribution {
+  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bookId            String            @map("book_id") @db.Uuid
+  
+  // Distribution target - business/provider with optional location
+  businessId        String            @map("business_id") @db.Uuid // The business/provider receiving books
+  businessName      String            @map("business_name") @db.VarChar(255) // Denormalized for performance
+  locationId        String?           @map("location_id") @db.Uuid // Optional specific location (e.g., specific McDonald's branch)
+  locationName      String?           @map("location_name") @db.VarChar(255) // Denormalized location name
+  
+  // Distribution details
+  quantity          Int               // Number of books distributed
+  distributionType  String            @map("distribution_type") @db.VarChar(50) // 'initial', 'reorder', 'replacement'
+  
+  // Contact information for this distribution
+  contactName       String            @map("contact_name") @db.VarChar(255)
+  contactEmail      String?           @map("contact_email") @db.VarChar(255)
+  contactPhone      String?           @map("contact_phone") @db.VarChar(50)
+  deliveryAddress   String?           @map("delivery_address") @db.Text
+  
+  // Status tracking
+  status            String            @default("pending") @db.VarChar(50) // 'pending', 'shipped', 'delivered', 'cancelled'
+  shippedAt         DateTime?         @map("shipped_at") @db.Timestamptz(6)
+  deliveredAt       DateTime?         @map("delivered_at") @db.Timestamptz(6)
+  
+  // Tracking information
+  trackingNumber    String?           @map("tracking_number") @db.VarChar(255)
+  shippingCarrier   String?           @map("shipping_carrier") @db.VarChar(100)
+  
+  // Notes and metadata
+  notes             String?           @db.Text // Internal notes about the distribution
+  metadata          Json?             // Additional data (cost, special instructions, etc.)
+  
+  // Audit fields
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime          @default(now()) @map("updated_at") @db.Timestamptz(6) @updatedAt
+  createdBy         String            @map("created_by") @db.Uuid
+  updatedBy         String?           @map("updated_by") @db.Uuid
+
+  // Relations
+  book              VoucherBook       @relation(fields: [bookId], references: [id])
+  createdByUser     User              @relation("BookDistributionCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser     User?             @relation("BookDistributionUpdatedBy", fields: [updatedBy], references: [id])
+  
+  @@index([bookId])
+  @@index([businessId])
+  @@index([locationId])
+  @@index([status])
+  @@index([shippedAt])
+  @@index([deliveredAt])
+  @@index([createdAt])
+  @@map("book_distributions")
+  @@schema("files")
+}

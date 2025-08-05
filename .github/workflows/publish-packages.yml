@@ -1,0 +1,86 @@
+name: Publish Packages to GitHub Packages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/api/**'
+      - 'packages/types/**'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 1.0.1)'
+        required: false
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Update version if provided
+        if: ${{ github.event.inputs.version }}
+        run: |
+          # Update version in both packages
+          cd packages/types
+          npm version ${{ github.event.inputs.version }} --no-git-tag-version
+          cd ../api
+          npm version ${{ github.event.inputs.version }} --no-git-tag-version
+          # Update the dependency version in api package
+          npm pkg set dependencies.@Merodami/pika-types="^${{ github.event.inputs.version }}"
+
+      - name: Build @pika/types
+        run: yarn workspace @pika/types build
+
+      - name: Build @pika/api
+        run: |
+          # First generate OpenAPI spec
+          yarn workspace @pika/api generate:openapi
+          # Then build
+          yarn workspace @pika/api build
+
+      - name: Copy package.json files for publishing
+        run: |
+          cp packages/types/package.github.json packages/types/package.json
+          cp packages/api/package.github.json packages/api/package.json
+
+      - name: Publish @Merodami/pika-types
+        run: |
+          cd packages/types
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Wait for types package to be available
+        run: sleep 15
+
+      - name: Publish @Merodami/pika-api
+        run: |
+          cd packages/api
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create release tag
+        if: ${{ github.event.inputs.version }}
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git tag -a "v${{ github.event.inputs.version }}" -m "Release v${{ github.event.inputs.version }}"
+          git push origin "v${{ github.event.inputs.version }}"

@@ -1,0 +1,4 @@
+# Ignore Flutter iOS and Android directories
+**/.symlinks/**
+pika/**
+pika-old/**

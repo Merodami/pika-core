@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "composite": true,
+    "declaration": true,
+    "tsBuildInfoFile": "dist/.tsbuildinfo",
+    "declarationDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "@pika/crypto/*": ["src/*"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["../../node_modules", "node_modules"]
+}

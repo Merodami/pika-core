@@ -1,0 +1,29 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "composite": true,
+    "tsBuildInfoFile": "dist/.tsbuildinfo",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": "."
+  },
+  "include": ["src", "scripts"],
+  "exclude": [
+    "dist",
+    "../../node_modules",
+    "node_modules",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/tests/**"
+  ],
+  "references": [
+    {
+      "path": "../shared"
+    },
+    {
+      "path": "../redis"
+    }
+  ]
+}
